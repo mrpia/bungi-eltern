@@ -19,22 +19,22 @@
 <link rel="stylesheet" href="/assets/f/formular.css">
 <title>Kontaktangaben</title>
 
-<meta name="kk-klasse" content="Klasse 3a">
+<meta name="kk-class" content="Klasse 3a">
 <meta name="kk-slug" content="3a">
-<meta name="kk-jahr" content="2026/27">
-<meta name="kk-schule" content="Schule Bungertwies">
-<meta name="kk-merkblatt" content="2026-08-1">
-<meta name="kk-basis" content="https://bungi-eltern.mrpia.ch">
+<meta name="kk-year" content="2026/27">
+<meta name="kk-school" content="Schule Bungertwies">
+<meta name="kk-notice" content="2026-08-1">
+<meta name="kk-base" content="https://bungi-eltern.mrpia.ch">
 
 <body>
 <h1 data-en="Class contact details">Kontaktangaben für die Klasse</h1>
-<div class="kopf">
-  <span><span id="kopf-klasse">Klasse 3a</span> · <span id="kopf-jahr">2026/27</span> ·
-    Elternrat <span id="kopf-schule">Schule Bungertwies</span></span>
-  <button type="button" class="sprache" id="sprache">English</button>
+<div class="head">
+  <span><span id="head-class">Klasse 3a</span> · <span id="head-year">2026/27</span> ·
+    Elternrat <span id="head-school">Schule Bungertwies</span></span>
+  <button type="button" class="language" id="language">English</button>
 </div>
 
-<p class="einleitung" data-en="Two elected class delegates pass on the parents' council's
+<p class="intro" data-en="Two elected class delegates pass on the parents' council's
   minutes and requests, and raise questions from the class. They need a way to reach you.
   A class contact list and a WhatsApp group are possible on top of that, but entirely
   voluntary. Required are only your child's name and one way to contact you.">
@@ -44,125 +44,125 @@
   sind nur der Name des Kindes und eine Kontaktmöglichkeit.
 </p>
 
-<div class="fehler versteckt" id="fehler" role="alert"></div>
+<div class="error hidden" id="error" role="alert"></div>
 
-<form id="formular" novalidate>
+<form id="form" novalidate>
   <fieldset>
     <legend data-en="Child">Kind</legend>
-    <div class="paar">
+    <div class="pair">
       <label>
-        <span class="feldname" data-en="First name *">Vorname <span class="pflicht">*</span></span>
-        <input type="text" id="kind-vorname" autocomplete="off" enterkeyhint="next">
+        <span class="field-label" data-en="First name *">Vorname <span class="required">*</span></span>
+        <input type="text" id="child-first-name" autocomplete="off" enterkeyhint="next">
       </label>
       <label>
-        <span class="feldname" data-en="Surname">Nachname</span>
-        <input type="text" id="kind-nachname" autocomplete="off">
+        <span class="field-label" data-en="Surname">Nachname</span>
+        <input type="text" id="child-last-name" autocomplete="off">
       </label>
     </div>
   </fieldset>
 
-  <fieldset id="person1">
+  <fieldset id="carer1">
     <legend data-en="You">Sie</legend>
-    <p class="legende-hinweis" data-en="One of email or mobile is enough.">
+    <p class="legend-note" data-en="One of email or mobile is enough.">
       E-Mail oder Mobilnummer — eines von beiden genügt.
     </p>
-    <div class="paar">
+    <div class="pair">
       <label>
-        <span class="feldname" data-en="First name *">Vorname <span class="pflicht">*</span></span>
-        <input type="text" data-rolle="vorname" autocomplete="given-name">
+        <span class="field-label" data-en="First name *">Vorname <span class="required">*</span></span>
+        <input type="text" data-role="firstName" autocomplete="given-name">
       </label>
       <label>
-        <span class="feldname" data-en="Surname">Nachname</span>
-        <input type="text" data-rolle="nachname" autocomplete="family-name">
+        <span class="field-label" data-en="Surname">Nachname</span>
+        <input type="text" data-role="lastName" autocomplete="family-name">
       </label>
     </div>
     <label>
-      <span class="feldname" data-en="I am">Ich bin</span>
-      <select data-rolle="rolle">
+      <span class="field-label" data-en="I am">Ich bin</span>
+      <select data-role="role">
         <option value="Mutter" data-en="Mother">Mutter</option>
         <option value="Vater" data-en="Father">Vater</option>
         <option value="andere Bezugsperson" data-en="other carer">andere Bezugsperson</option>
       </select>
     </label>
     <label>
-      <span class="feldname" data-en="Email">E-Mail</span>
-      <input type="email" data-rolle="email" autocomplete="email" inputmode="email"
+      <span class="field-label" data-en="Email">E-Mail</span>
+      <input type="email" data-role="email" autocomplete="email" inputmode="email"
              spellcheck="false" autocapitalize="off">
-      <p class="hinweis versteckt" data-hinweis="email"></p>
+      <p class="note hidden" data-note="email"></p>
     </label>
     <label>
-      <span class="feldname" data-en="Mobile">Mobilnummer</span>
-      <input type="tel" data-rolle="mobil" autocomplete="tel" inputmode="tel">
-      <p class="hinweis versteckt" data-hinweis="mobil"></p>
+      <span class="field-label" data-en="Mobile">Mobilnummer</span>
+      <input type="tel" data-role="mobile" autocomplete="tel" inputmode="tel">
+      <p class="note hidden" data-note="mobil"></p>
     </label>
-    <button type="button" class="mehr" data-adresse-knopf
+    <button type="button" class="more" data-address-toggle
             data-en="+ Add address (voluntary)">+ Adresse angeben (freiwillig)</button>
-    <div data-adresse class="versteckt">
+    <div data-address class="hidden">
       <label>
-        <span class="feldname" data-en="Street and number">Strasse und Nummer</span>
-        <input type="text" data-rolle="strasse" autocomplete="street-address">
+        <span class="field-label" data-en="Street and number">Strasse und Nummer</span>
+        <input type="text" data-role="street" autocomplete="street-address">
       </label>
-      <div class="paar">
-        <label class="schmal">
-          <span class="feldname" data-en="Postcode">PLZ</span>
-          <input type="text" data-rolle="plz" autocomplete="postal-code" inputmode="numeric">
+      <div class="pair">
+        <label class="narrow">
+          <span class="field-label" data-en="Postcode">PLZ</span>
+          <input type="text" data-role="postcode" autocomplete="postal-code" inputmode="numeric">
         </label>
         <label>
-          <span class="feldname" data-en="Town">Ort</span>
-          <input type="text" data-rolle="ort" autocomplete="address-level2">
+          <span class="field-label" data-en="Town">Ort</span>
+          <input type="text" data-role="town" autocomplete="address-level2">
         </label>
       </div>
     </div>
   </fieldset>
 
-  <button type="button" class="mehr" id="person2-knopf"
+  <button type="button" class="more" id="carer2-toggle"
           data-en="+ Add a second parent or carer">+ Zweite Person hinzufügen</button>
 
-  <fieldset id="person2" class="versteckt">
+  <fieldset id="carer2" class="hidden">
     <legend data-en="Second parent or carer">Zweite Person</legend>
-    <div class="paar">
+    <div class="pair">
       <label>
-        <span class="feldname" data-en="First name">Vorname</span>
-        <input type="text" data-rolle="vorname" autocomplete="off">
+        <span class="field-label" data-en="First name">Vorname</span>
+        <input type="text" data-role="firstName" autocomplete="off">
       </label>
       <label>
-        <span class="feldname" data-en="Surname">Nachname</span>
-        <input type="text" data-rolle="nachname" autocomplete="off">
+        <span class="field-label" data-en="Surname">Nachname</span>
+        <input type="text" data-role="lastName" autocomplete="off">
       </label>
     </div>
     <label>
-      <span class="feldname" data-en="This person is">Diese Person ist</span>
-      <select data-rolle="rolle">
+      <span class="field-label" data-en="This person is">Diese Person ist</span>
+      <select data-role="role">
         <option value="Vater" data-en="Father">Vater</option>
         <option value="Mutter" data-en="Mother">Mutter</option>
         <option value="andere Bezugsperson" data-en="other carer">andere Bezugsperson</option>
       </select>
     </label>
     <label>
-      <span class="feldname" data-en="Email">E-Mail</span>
-      <input type="email" data-rolle="email" inputmode="email" spellcheck="false" autocapitalize="off">
-      <p class="hinweis versteckt" data-hinweis="email"></p>
+      <span class="field-label" data-en="Email">E-Mail</span>
+      <input type="email" data-role="email" inputmode="email" spellcheck="false" autocapitalize="off">
+      <p class="note hidden" data-note="email"></p>
     </label>
     <label>
-      <span class="feldname" data-en="Mobile">Mobilnummer</span>
-      <input type="tel" data-rolle="mobil" inputmode="tel">
-      <p class="hinweis versteckt" data-hinweis="mobil"></p>
+      <span class="field-label" data-en="Mobile">Mobilnummer</span>
+      <input type="tel" data-role="mobile" inputmode="tel">
+      <p class="note hidden" data-note="mobil"></p>
     </label>
-    <button type="button" class="mehr" data-adresse-knopf
+    <button type="button" class="more" data-address-toggle
             data-en="+ Add address (voluntary)">+ Adresse angeben (freiwillig)</button>
-    <div data-adresse class="versteckt">
+    <div data-address class="hidden">
       <label>
-        <span class="feldname" data-en="Street and number">Strasse und Nummer</span>
-        <input type="text" data-rolle="strasse">
+        <span class="field-label" data-en="Street and number">Strasse und Nummer</span>
+        <input type="text" data-role="street">
       </label>
-      <div class="paar">
-        <label class="schmal">
-          <span class="feldname" data-en="Postcode">PLZ</span>
-          <input type="text" data-rolle="plz" inputmode="numeric">
+      <div class="pair">
+        <label class="narrow">
+          <span class="field-label" data-en="Postcode">PLZ</span>
+          <input type="text" data-role="postcode" inputmode="numeric">
         </label>
         <label>
-          <span class="feldname" data-en="Town">Ort</span>
-          <input type="text" data-rolle="ort">
+          <span class="field-label" data-en="Town">Ort</span>
+          <input type="text" data-role="town">
         </label>
       </div>
     </div>
@@ -170,41 +170,41 @@
 
   <fieldset>
     <legend data-en="Voluntary">Freiwillig</legend>
-    <div class="zustimmung">
+    <div class="consent">
       <label>
-        <input type="checkbox" id="zust-liste">
+        <input type="checkbox" id="consent-list">
         <span data-en="Yes, my details may go on the contact list for this class, which all
           parents of the class receive.">Ja, meine Angaben dürfen in die Kontaktliste dieser
           Klasse aufgenommen werden, die alle Eltern der Klasse erhalten.</span>
       </label>
       <label>
-        <input type="checkbox" id="zust-whatsapp">
+        <input type="checkbox" id="consent-whatsapp">
         <span data-en="Yes, add me to the class WhatsApp group.">Ja, ich möchte in die
           WhatsApp-Gruppe der Klasse.
-          <span class="klein" data-en="Everyone in the group can see your number.">Alle
+          <span class="small" data-en="Everyone in the group can see your number.">Alle
             Mitglieder der Gruppe sehen dort Ihre Nummer.</span></span>
       </label>
     </div>
   </fieldset>
 
-  <button type="button" class="knopf" id="weiter"
+  <button type="button" class="button" id="continue"
           data-en="Check my details">Weiter: Angaben prüfen</button>
 </form>
 
-<section id="pruefen-bereich" class="versteckt">
-  <h2 class="pruefen-titel" data-en="This is what you will send">Das senden Sie</h2>
-  <div class="fehler versteckt" id="offene-warnungen" role="status"></div>
-  <div class="pruefen"><pre id="zusammenfassung"></pre></div>
-  <button type="button" class="knopf" id="senden-whatsapp"
+<section id="review" class="hidden">
+  <h2 class="review-title" data-en="This is what you will send">Das senden Sie</h2>
+  <div class="error hidden" id="open-warnings" role="status"></div>
+  <div class="review"><pre id="summary"></pre></div>
+  <button type="button" class="button" id="send-whatsapp"
           data-en="Send via WhatsApp">Per WhatsApp senden</button>
-  <button type="button" class="knopf zweit" id="senden-mail"
+  <button type="button" class="button secondary" id="send-mail"
           data-en="Send by email">Per E-Mail senden</button>
-  <button type="button" class="knopf zweit" id="zurueck"
+  <button type="button" class="button secondary" id="back"
           data-en="Back, I want to change something">Zurück, ich möchte etwas ändern</button>
-  <p class="hinweis" id="empfaenger-hinweis"></p>
+  <p class="note" id="recipient-note"></p>
 </section>
 
-<p class="fuss" data-en="This page stores nothing and sends nothing. It prepares a message
+<p class="footer" data-en="This page stores nothing and sends nothing. It prepares a message
   that you send yourself, to the delegates of your class. Details:">
   Diese Seite speichert nichts und sendet nichts. Sie stellt eine Nachricht zusammen, die
   Sie selber abschicken — an die Delegierten Ihrer Klasse. Einzelheiten im

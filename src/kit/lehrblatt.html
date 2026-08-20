@@ -3,7 +3,7 @@
   teacher, who runs the parents' evening. Carries the two delegate slips, because the
   "you were elected tonight" instructions belong on 2 slips per class, not on 22 identical
   family sheets.
-    ?klasse=Klasse+3a&jahr=2026/27&schule=Primarschule+Beispiel&anzahl=22
+    ?class=Klasse+3a&year=2026/27&school=Primarschule+Beispiel&count=22
 -->
 <meta charset="utf-8">
 <link rel="icon" href="/favicon.svg">
@@ -16,7 +16,7 @@
          font: 10.5pt/1.45 Georgia, "Times New Roman", serif; }
 
   h1 { font-family: Arial, "Helvetica Neue", sans-serif; font-size: 13.5pt; margin: 0 0 1mm; }
-  .kopf { font-family: Arial, "Helvetica Neue", sans-serif; font-size: 9pt; color: var(--muted);
+  .head { font-family: Arial, "Helvetica Neue", sans-serif; font-size: 9pt; color: var(--muted);
           margin-bottom: 4mm; padding-bottom: 1.6mm; border-bottom: 1.5pt solid var(--accent); }
   h2 { font-family: Arial, "Helvetica Neue", sans-serif; font-size: 10pt; text-transform: uppercase;
        letter-spacing: 0.06em; color: var(--accent); margin: 5mm 0 1.5mm; }
@@ -24,21 +24,21 @@
   ol { margin: 0 0 2.5mm; padding-left: 6mm; }
   li { margin-bottom: 1.5mm; }
 
-  .vorlesen { border-left: 2pt solid var(--accent); background: #f5f8fb;
+  .read-aloud { border-left: 2pt solid var(--accent); background: #f5f8fb;
               padding: 2.5mm 3.5mm; margin: 3mm 0; font-style: italic; }
 
-  .schnitt { margin: 7mm 0 5mm; border-top: 0.75pt dashed #888; height: 0; position: relative; }
-  .schnitt::before { content: "✂"; position: absolute; top: -5.5pt; left: 0; background: #fff;
+  .cut { margin: 7mm 0 5mm; border-top: 0.75pt dashed #888; height: 0; position: relative; }
+  .cut::before { content: "✂"; position: absolute; top: -5.5pt; left: 0; background: #fff;
                      padding-right: 2mm; font-size: 9pt; color: #888; }
 
-  .zettel-paar { display: flex; gap: 6mm; }
-  .zettel { flex: 1; border: 0.75pt solid var(--accent); background: #f4f7fa;
+  .slip-pair { display: flex; gap: 6mm; }
+  .slip { flex: 1; border: 0.75pt solid var(--accent); background: #f4f7fa;
             padding: 3mm 3.5mm; font-family: Arial, "Helvetica Neue", sans-serif; font-size: 9pt; }
-  .zettel h3 { font-size: 10pt; margin: 0 0 1.5mm; color: var(--accent); }
+  .slip h3 { font-size: 10pt; margin: 0 0 1.5mm; color: var(--accent); }
   .qr { width: 24mm; height: 24mm; border: 0.5pt dashed var(--rule); margin: 2mm 0;
         display: grid; place-items: center; text-align: center; font-size: 7pt; color: var(--muted); }
   .link { font-family: Consolas, Menlo, monospace; font-size: 8.5pt; word-break: break-all; }
-  .fuss { font-size: 7.5pt; color: var(--muted); margin-top: 4mm; padding-top: 1.5mm;
+  .footer { font-size: 7.5pt; color: var(--muted); margin-top: 4mm; padding-top: 1.5mm;
           border-top: 0.5pt solid var(--rule); display: flex; justify-content: space-between; }
 
   @media screen { body { padding: 14mm 16mm; box-shadow: 0 0 0 1px #e3e3e3; margin-block: 8mm; } }
@@ -46,15 +46,15 @@
 </style>
 <body>
   <h1>Elternabend: Kontaktangaben der Klasseneltern</h1>
-  <div class="kopf">
-    Für die Lehrperson · <span data-feld="klasse">Klasse 3a</span> ·
-    Schuljahr <span data-feld="jahr">2026/27</span> ·
-    Elternrat <span data-feld="schule">Schule Bungertwies</span>
+  <div class="head">
+    Für die Lehrperson · <span data-field="class">Klasse 3a</span> ·
+    Schuljahr <span data-field="year">2026/27</span> ·
+    Elternrat <span data-field="school">Schule Bungertwies</span>
   </div>
 
   <h2>Was beiliegt</h2>
   <p>
-    <span data-feld="anzahl">22</span> Elternblätter für diese Klasse, dieses Lehrblatt, und
+    <span data-field="count">22</span> Elternblätter für diese Klasse, dieses Lehrblatt, und
     unten zwei Zettel für die neu gewählten Delegierten.
   </p>
 
@@ -72,7 +72,7 @@
   </ol>
 
   <h2>Vorschlag zum Vorlesen</h2>
-  <div class="vorlesen">
+  <div class="read-aloud">
     „Der Elternrat braucht von jeder Familie eine Kontaktangabe, damit die Delegierten
     dieser Klasse Sie erreichen können. Wer möchte, kann zusätzlich in eine Klassenliste
     und in eine WhatsApp-Gruppe aufgenommen werden — das ist freiwillig und braucht ein
@@ -88,24 +88,24 @@
     Schule über Escola — nur die Nachrichten des Elternrats erreichen diese Familie nicht.
   </p>
 
-  <div class="schnitt"></div>
+  <div class="cut"></div>
 
-  <div class="zettel-paar">
-    <div class="zettel">
+  <div class="slip-pair">
+    <div class="slip">
       <h3>Heute gewählt? Hier starten.</h3>
-      <div>Für die Delegierten der <span data-feld="klasse">Klasse 3a</span>.</div>
+      <div>Für die Delegierten der <span data-field="class">Klasse 3a</span>.</div>
       <div class="qr" data-qr="start"></div>
-      <div class="link" data-feld="startlink"></div>
+      <div class="link" data-field="startLink"></div>
       <div style="margin-top:2mm">
         Eine Minute, kein Konto nötig, läuft auf dem Handy. Danach haben Sie einen Link für
         Ihre Klasse, den Sie den Eltern schicken können.
       </div>
     </div>
-    <div class="zettel">
+    <div class="slip">
       <h3>Heute gewählt? Hier starten.</h3>
-      <div>Für die Delegierten der <span data-feld="klasse">Klasse 3a</span>.</div>
+      <div>Für die Delegierten der <span data-field="class">Klasse 3a</span>.</div>
       <div class="qr" data-qr="start"></div>
-      <div class="link" data-feld="startlink"></div>
+      <div class="link" data-field="startLink"></div>
       <div style="margin-top:2mm">
         Eine Minute, kein Konto nötig, läuft auf dem Handy. Danach haben Sie einen Link für
         Ihre Klasse, den Sie den Eltern schicken können.
@@ -113,33 +113,33 @@
     </div>
   </div>
 
-  <div class="fuss">
-    <span>Fragen: <span data-feld="kontakt"></span></span>
-    <span>Merkblatt-Version <span data-feld="version">2026-08-1</span></span>
+  <div class="footer">
+    <span>Fragen: <span data-field="contact"></span></span>
+    <span>Merkblatt-Version <span data-field="version">2026-08-1</span></span>
   </div>
 </body>
 <script type="module">
   import { qrSvg } from '../core/qr.js';
 
   const p = new URLSearchParams(location.search);
-  const basis = (p.get('basis') || 'https://bungi-eltern.mrpia.ch').replace(/\/$/, '');
-  const startUrl = `${basis}/start`;
+  const base = (p.get('base') || 'https://bungi-eltern.mrpia.ch').replace(/\/$/, '');
+  const startUrl = `${base}/start`;
 
-  const werte = {
-    klasse: p.get('klasse') || 'Klasse 3a',
-    jahr: p.get('jahr') || '2026/27',
-    schule: p.get('schule') || 'Schule Bungertwies',
-    anzahl: p.get('anzahl') || '22',
+  const values = {
+    class: p.get('class') || 'Klasse 3a',
+    year: p.get('year') || '2026/27',
+    school: p.get('school') || 'Schule Bungertwies',
+    count: p.get('count') || '22',
     version: p.get('version') || '2026-08-1',
-    kontakt: p.get('kontakt') || 'pa.galiana@gmail.com',
-    startlink: startUrl.replace(/^https?:\/\//, ''),
+    contact: p.get('contact') || 'pa.galiana@gmail.com',
+    startLink: startUrl.replace(/^https?:\/\//, ''),
   };
-  for (const el of document.querySelectorAll('[data-feld]')) {
-    if (werte[el.dataset.feld]) el.textContent = werte[el.dataset.feld];
+  for (const el of document.querySelectorAll('[data-field]')) {
+    if (values[el.dataset.field]) el.textContent = values[el.dataset.field];
   }
   for (const el of document.querySelectorAll('[data-qr]')) {
     el.innerHTML = qrSvg(startUrl, { title: startUrl });
     el.style.border = 'none';
   }
-  document.title = 'Lehrblatt ' + werte.klasse;
+  document.title = 'Lehrblatt ' + values.class;
 </script>

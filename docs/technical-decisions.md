@@ -117,6 +117,21 @@ no DOM access. Therefore:
 
 That is the reason for the inliner: not optimisation, but `file://`.
 
+## Asset URLs carry a content hash
+
+`site/f/3a/index.html` references `/assets/f/formular.js?v=3e19eb28`, where the query is a
+short sha256 of the file's contents.
+
+HTML and JS are separately cached files. After a deploy a browser can hold the old script
+and fetch the new page, and then the two disagree about element ids and field names. That is
+a failure a delegate cannot diagnose and cannot fix by reloading — and it is not
+hypothetical: it happened during the English rename, where a cached script kept looking for
+`#kind-vorname` while the page had already become `#child-first-name`.
+
+Hashing the URL means new content is a new URL, so the pair can never come apart, while
+unchanged assets stay cached. This is the whole of the build's cache strategy; there is no
+service worker and no manifest.
+
 ## Language rule
 
 **English for everything a developer reads** — code, comments, specs, commit messages.

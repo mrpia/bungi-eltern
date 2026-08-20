@@ -9,6 +9,7 @@
 
 import { readFile, writeFile, mkdir, rm, readdir, copyFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
+import { createHash } from 'node:crypto';
 import { parseClassName, compareClasses } from '../src/core/classname.js';
 
 const ROOT = new URL('..', import.meta.url).pathname;
@@ -31,11 +32,22 @@ const cfg = JSON.parse(await readFile(join(ROOT, 'site.config.json'), 'utf8'));
  */
 function fillDefaults(text, values) {
   return text.replace(
-    /<(span|div)([^>]*?)data-feld="([a-z]+)"([^>]*?)><\/\1>/g,
+    /<(span|div)([^>]*?)data-field="([a-z]+)"([^>]*?)><\/\1>/g,
     (whole, tag, pre, field, post) =>
-      values[field] === undefined ? whole : `<${tag}${pre}data-feld="${field}"${post}>${values[field]}</${tag}>`,
+      values[field] === undefined ? whole : `<${tag}${pre}data-field="${field}"${post}>${values[field]}</${tag}>`,
   );
 }
+
+/**
+ * Content hash appended to asset URLs, so a page never runs a stale script.
+ *
+ * HTML and JS are separately cached files. After a deploy a browser can hold the old
+ * script and fetch the new page, and then the two disagree about element ids and field
+ * names — a failure a delegate cannot diagnose and cannot fix by reloading. Hashing the
+ * URL means new content is a new URL, so the pair can never come apart, and unchanged
+ * assets stay cached.
+ */
+const hash = (text) => createHash('sha256').update(text).digest('hex').slice(0, 8);
 
 /** Relative module imports become absolute, so nesting depth stops mattering. */
 const absolutise = (text) =>
@@ -68,34 +80,34 @@ const shell = (title, body, extraHead = '') => `<meta charset="utf-8">
 <link rel="icon" href="/favicon.svg">
 <title>${title}</title>
 <style>
-  :root { --ink: #1a1a1a; --muted: #5a5a5a; --accent: #1f4e79; --flaeche: #f4f7fa; }
+  :root { --ink: #1a1a1a; --muted: #5a5a5a; --accent: #1f4e79; --panel: #f4f7fa; }
   @media (prefers-color-scheme: dark) {
-    :root { --ink: #ececec; --muted: #a8a8a8; --accent: #7db3e8; --flaeche: #1c2431; }
+    :root { --ink: #ececec; --muted: #a8a8a8; --accent: #7db3e8; --panel: #1c2431; }
     body { background: #12151a; }
   }
   * { box-sizing: border-box; }
   body { margin: 0 auto; max-width: 34rem; padding: 2rem 1.25rem 4rem; color: var(--ink);
          font: 16px/1.55 -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
   h1 { font-size: 1.4rem; margin: 0 0 .25rem; }
-  .kopf { color: var(--muted); font-size: .9rem; margin-bottom: 1.5rem;
+  .head { color: var(--muted); font-size: .9rem; margin-bottom: 1.5rem;
           padding-bottom: .6rem; border-bottom: 2px solid var(--accent); }
   a { color: var(--accent); }
   ul { padding-left: 1.2rem; }
   li { margin-bottom: .4rem; }
-  .kasten { background: var(--flaeche); border-radius: 8px; padding: 1rem 1.1rem; margin: 1.2rem 0; }
-  .fuss { color: var(--muted); font-size: .8rem; margin-top: 2.5rem; }
+  .box { background: var(--panel); border-radius: 8px; padding: 1rem 1.1rem; margin: 1.2rem 0; }
+  .footer { color: var(--muted); font-size: .8rem; margin-top: 2.5rem; }
   code { font-family: Consolas, Menlo, monospace; font-size: .9em; }
 </style>
 ${extraHead}
 <body>
 ${body}
-<p class="fuss">Elternrat ${cfg.school} · Schuljahr ${cfg.schoolYear} ·
+<p class="footer">Elternrat ${cfg.school} · Schuljahr ${cfg.schoolYear} ·
   <a href="/merkblatt/">Merkblatt</a> · ${cfg.contact}</p>
 </body>`;
 
 const stub = (title, wer) => shell(title, `<h1>${title}</h1>
-<div class="kopf">Elternrat ${cfg.school}</div>
-<div class="kasten">
+<div class="head">Elternrat ${cfg.school}</div>
+<div class="box">
   <strong>Diese Seite wird gerade gebaut.</strong>
   <p style="margin:.5rem 0 0">Sie ist ${wer} gedacht und in wenigen Tagen bereit.
   Wenn Sie hier gelandet sind und etwas brauchen, schreiben Sie an
@@ -145,10 +157,16 @@ await write('w/index.html', stub('Werkstatt', 'für die Klassendelegierten zum E
 // The parent form: one page per class. The class is written into <meta> tags rather than a
 // query string, so the page needs no inline script and its CSP can stay script-src 'self'.
 // Only the shared assets go to /assets/f/; index.html is a template, not a served page.
+const formAssetHashes = {};
 for (const file of ['formular.css', 'formular.js']) {
-  await write(join('assets/f', file), absolutise(await readFile(join(SRC, 'f', file), 'utf8')));
+  const body = absolutise(await readFile(join(SRC, 'f', file), 'utf8'));
+  formAssetHashes[file] = hash(body);
+  await write(join('assets/f', file), body);
 }
-const formTemplate = await readFile(join(SRC, 'f/index.html'), 'utf8');
+let formTemplate = await readFile(join(SRC, 'f/index.html'), 'utf8');
+for (const [file, h] of Object.entries(formAssetHashes)) {
+  formTemplate = formTemplate.replaceAll(`/assets/f/${file}`, `/assets/f/${file}?v=${h}`);
+}
 for (const c of classes) {
   const seite = formTemplate
     .replace('<meta name="kk-klasse" content="Klasse 3a">', `<meta name="kk-klasse" content="${c.parsed.display}">`)
@@ -162,11 +180,11 @@ for (const c of classes) {
 
 // Landing page.
 await write('index.html', shell(`Elternrat ${cfg.school}`, `<h1>Elternrat ${cfg.school}</h1>
-<div class="kopf">Kontaktangaben der Klasseneltern · Schuljahr ${cfg.schoolYear}</div>
+<div class="head">Kontaktangaben der Klasseneltern · Schuljahr ${cfg.schoolYear}</div>
 <p>Diese Seite gehört dem Elternrat der ${cfg.school}. Sie hilft den Klassendelegierten,
 die Kontaktangaben ihrer Klasseneltern zu sammeln — freiwillig, und nur mit
 Einverständnis.</p>
-<div class="kasten">
+<div class="box">
   <strong>Es liegen hier keine Daten.</strong>
   <p style="margin:.5rem 0 0">Die Angaben einer Klasse bleiben bei den Delegierten dieser
   Klasse. Diese Seite hat keine Datenbank und speichert nichts: alles läuft im Browser der
@@ -183,16 +201,16 @@ Elternabend.</p>`));
 
 // Interim kit page: the batch generator will replace the link list with a print-all run.
 await write('kit/index.html', shell('Kit: Blätter für den Elternabend', `<h1>Blätter für den Elternabend</h1>
-<div class="kopf">Intern · Elternrat ${cfg.school} · ${classes.length} Klassen</div>
+<div class="head">Intern · Elternrat ${cfg.school} · ${classes.length} Klassen</div>
 <p style="color:var(--muted);font-size:.9rem">Pro Klasse ein Lehrblatt und ein Elternblatt.
 Öffnen, mit Strg/Cmd + P als PDF speichern, Skalierung 100 %.</p>
 <table style="width:100%;border-collapse:collapse;font-size:.95rem">
 <tr style="text-align:left"><th>Klasse</th><th>Lehrblatt</th><th>Elternblatt</th><th>Formular</th></tr>
 ${classes.map((c) => {
-  const q = `klasse=${encodeURIComponent(c.parsed.display)}&jahr=${encodeURIComponent(cfg.schoolYear)}` +
-            `&schule=${encodeURIComponent(cfg.school)}&kontakt=${encodeURIComponent(cfg.contact)}` +
-            `&version=${encodeURIComponent(cfg.noticeVersion)}&anzahl=${c.count}` +
-            `&basis=${encodeURIComponent(cfg.baseUrl)}`;
+  const q = `class=${encodeURIComponent(c.parsed.display)}&year=${encodeURIComponent(cfg.schoolYear)}` +
+            `&school=${encodeURIComponent(cfg.school)}&contact=${encodeURIComponent(cfg.contact)}` +
+            `&version=${encodeURIComponent(cfg.noticeVersion)}&count=${c.count}` +
+            `&base=${encodeURIComponent(cfg.baseUrl)}`;
   return `<tr style="border-top:1px solid #ccc"><td>${c.parsed.display}</td>` +
     `<td><a href="/kit/lehrblatt.html?${q}">öffnen</a></td>` +
     `<td><a href="/kit/blatt.html?${q}">öffnen</a></td>` +

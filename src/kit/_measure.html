@@ -2,26 +2,26 @@
      Not shipped. Kept because "does it still fit on one page" is a regression worth rerunning
      after every text edit. -->
 <meta charset="utf-8">
-<title>Seitenhöhen messen</title>
+<title>Page height check</title>
 <style>
   body { font: 13px/1.5 ui-monospace, Consolas, monospace; margin: 24px; }
   iframe { width: 220mm; height: 400mm; border: 0; position: absolute; left: -9999px; }
   td { padding: 3px 12px 3px 0; } .ok { color: #0a7d28; } .bad { color: #b00020; font-weight: 700; }
 </style>
 <body>
-<table id="out"><tr><th align="left">Blatt</th><th align="left">Inhalt</th><th align="left">Druckbar</th><th align="left">Reserve</th><th></th></tr></table>
+<table id="out"><tr><th align="left">Sheet</th><th align="left">Content</th><th align="left">Printable</th><th align="left">Spare</th><th></th></tr></table>
 <div id="frames"></div>
 <script>
   // marginMm = the @page top+bottom margin declared in each sheet.
   const SHEETS = [
-    { file: 'blatt.html?klasse=Klasse+3a&jahr=2026/27', marginMm: 28 },
-    { file: 'lehrblatt.html?klasse=Klasse+3a&jahr=2026/27&anzahl=22', marginMm: 28 },
-    { file: 'merkblatt.html?jahr=2026/27', marginMm: 30 },
+    { file: 'blatt.html?class=Klasse+3a&year=2026/27', marginMm: 28 },
+    { file: 'lehrblatt.html?class=Klasse+3a&year=2026/27&count=22', marginMm: 28 },
+    { file: 'merkblatt.html?year=2026/27', marginMm: 30 },
   ];
   const PX_PER_MM = 96 / 25.4;
   const mm = (px) => Math.round((px / PX_PER_MM) * 10) / 10;
 
-  window.ergebnisse = [];
+  window.results = [];
 
   async function measure(sheet) {
     const f = document.createElement('iframe');
@@ -33,26 +33,26 @@
     const b = doc.body;
     b.style.padding = '0';
     b.style.margin = '0';
-    const banner = doc.querySelector('.hinweis-druck');
+    const banner = doc.querySelector('.print-hint');
     if (banner) banner.style.display = 'none';
 
     const kids = [...b.children].filter((e) => e.tagName !== 'SCRIPT' && e.offsetParent !== null);
     const span = mm(kids.at(-1).getBoundingClientRect().bottom - kids[0].getBoundingClientRect().top);
     const printable = Math.round((297 - sheet.marginMm) * 10) / 10;
     const font = f.contentWindow.getComputedStyle(b).fontFamily.split(',')[0].replace(/"/g, '');
-    return { blatt: sheet.file.split('?')[0], inhaltMm: span, druckbarMm: printable,
-             reserveMm: Math.round((printable - span) * 10) / 10, passt: span <= printable, font };
+    return { sheet: sheet.file.split('?')[0], contentMm: span, printableMm: printable,
+             spareMm: Math.round((printable - span) * 10) / 10, fits: span <= printable, font };
   }
 
   (async () => {
     const t = document.getElementById('out');
     for (const s of SHEETS) {
       const r = await measure(s);
-      window.ergebnisse.push(r);
+      window.results.push(r);
       const tr = t.insertRow();
-      tr.innerHTML = `<td>${r.blatt}</td><td>${r.inhaltMm} mm</td><td>${r.druckbarMm} mm</td>` +
-        `<td>${r.reserveMm} mm</td><td class="${r.passt ? 'ok' : 'bad'}">${r.passt ? 'passt' : 'ZU LANG'}</td>`;
+      tr.innerHTML = `<td>${r.sheet}</td><td>${r.contentMm} mm</td><td>${r.printableMm} mm</td>` +
+        `<td>${r.spareMm} mm</td><td class="${r.fits ? 'ok' : 'bad'}">${r.fits ? 'fits' : 'TOO LONG'}</td>`;
     }
-    window.fertig = true;
+    window.done = true;
   })();
 </script>

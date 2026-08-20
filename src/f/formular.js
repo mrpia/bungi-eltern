@@ -17,12 +17,12 @@ const meta = (name, fallback = '') =>
   document.querySelector(`meta[name="kk-${name}"]`)?.content || fallback;
 
 const CONTEXT = {
-  classLabel: meta('klasse'),
+  classLabel: meta('class'),
   slug: meta('slug'),
-  schoolYear: meta('jahr'),
-  school: meta('schule'),
-  noticeVersion: meta('merkblatt'),
-  baseUrl: meta('basis'),
+  schoolYear: meta('year'),
+  school: meta('school'),
+  noticeVersion: meta('notice'),
+  baseUrl: meta('base'),
 };
 
 // Optional: a delegate who shared their own link prefills the recipient. Absent when the
@@ -74,38 +74,38 @@ function setLanguage(next) {
     el.innerHTML = next === 'en' ? el.dataset.en : el.dataset.de;
   }
   document.documentElement.lang = next;
-  document.getElementById('sprache').textContent = next === 'en' ? 'Deutsch' : 'English';
+  document.getElementById('language').textContent = next === 'en' ? 'Deutsch' : 'English';
   redrawFieldNotes();
   // Text written by script is not covered by the [data-en] swap above, so it has to be
   // redrawn explicitly. Forgetting this is how half a page ends up in the wrong language.
   redrawScriptText();
 }
 
-document.getElementById('sprache').addEventListener('click', () => {
+document.getElementById('language').addEventListener('click', () => {
   setLanguage(language === 'de' ? 'en' : 'de');
 });
 
 // ---------------------------------------------------------------- header from meta
 
-document.getElementById('kopf-klasse').textContent = CONTEXT.classLabel;
-document.getElementById('kopf-jahr').textContent = CONTEXT.schoolYear;
-document.getElementById('kopf-schule').textContent = CONTEXT.school;
+document.getElementById('head-class').textContent = CONTEXT.classLabel;
+document.getElementById('head-year').textContent = CONTEXT.schoolYear;
+document.getElementById('head-school').textContent = CONTEXT.school;
 document.title = `${CONTEXT.classLabel} — Kontaktangaben`;
 
 // ---------------------------------------------------------------- progressive disclosure
 
-for (const button of document.querySelectorAll('[data-adresse-knopf]')) {
+for (const button of document.querySelectorAll('[data-address-toggle]')) {
   button.addEventListener('click', () => {
-    button.nextElementSibling.classList.remove('versteckt');
-    button.classList.add('versteckt');
+    button.nextElementSibling.classList.remove('hidden');
+    button.classList.add('hidden');
     button.nextElementSibling.querySelector('input')?.focus();
   });
 }
 
-document.getElementById('person2-knopf').addEventListener('click', (e) => {
-  document.getElementById('person2').classList.remove('versteckt');
-  e.target.classList.add('versteckt');
-  document.getElementById('person2').querySelector('input')?.focus();
+document.getElementById('carer2-toggle').addEventListener('click', (e) => {
+  document.getElementById('carer2').classList.remove('hidden');
+  e.target.classList.add('hidden');
+  document.getElementById('carer2').querySelector('input')?.focus();
 });
 
 // ---------------------------------------------------------------- live field feedback
@@ -114,7 +114,7 @@ document.getElementById('person2-knopf').addEventListener('click', (e) => {
 const fieldNotes = new Map();
 
 function setNote(field, kind, text, action) {
-  const p = field.closest('label').querySelector('[data-hinweis]');
+  const p = field.closest('label').querySelector('[data-note]');
   if (!p) return;
   fieldNotes.set(p, { kind, text, action });
   drawNote(p);
@@ -122,8 +122,8 @@ function setNote(field, kind, text, action) {
 
 function drawNote(p) {
   const note = fieldNotes.get(p);
-  if (!note || !note.text) { p.classList.add('versteckt'); p.textContent = ''; return; }
-  p.className = `hinweis ${note.kind}`;
+  if (!note || !note.text) { p.classList.add('hidden'); p.textContent = ''; return; }
+  p.className = `note ${note.kind}`;
   p.textContent = note.text();
   if (note.action) {
     p.append(' ');
@@ -137,21 +137,21 @@ function drawNote(p) {
 
 const redrawFieldNotes = () => fieldNotes.forEach((_, p) => drawNote(p));
 
-for (const field of document.querySelectorAll('[data-rolle="mobil"]')) {
+for (const field of document.querySelectorAll('[data-role="mobile"]')) {
   field.addEventListener('blur', () => {
     const raw = field.value.trim();
     if (!raw) return setNote(field, '', null);
     const r = normalizePhone(raw);
     if (r.ok) {
       field.value = r.display;
-      setNote(field, 'gut', () => t().phoneOk(r.display));
+      setNote(field, 'ok', () => t().phoneOk(r.display));
     } else {
       setNote(field, 'warn', () => t().phoneUnclear);
     }
   });
 }
 
-for (const field of document.querySelectorAll('[data-rolle="email"]')) {
+for (const field of document.querySelectorAll('[data-role="email"]')) {
   field.addEventListener('blur', () => {
     const raw = field.value.trim();
     if (!raw) return setNote(field, '', null);
@@ -171,7 +171,11 @@ for (const field of document.querySelectorAll('[data-rolle="email"]')) {
   });
 }
 
-const NAME_FIELDS = '[data-rolle="vorname"], [data-rolle="nachname"], #kind-vorname, #kind-nachname';
+// Street and town get the same treatment as names: the model normalises them on ingest
+// anyway, but the parent sees this text in the message they send, and "zürich" in a block
+// they are about to forward looks like the form did not work.
+const NAME_FIELDS = '[data-role="firstName"], [data-role="lastName"], [data-role="street"], '
+  + '[data-role="town"], #child-first-name, #child-last-name';
 for (const field of document.querySelectorAll(NAME_FIELDS)) {
   field.addEventListener('blur', () => { field.value = normalizeName(field.value); });
 }
@@ -180,13 +184,13 @@ for (const field of document.querySelectorAll(NAME_FIELDS)) {
 
 function readCaregiver(sectionId) {
   const root = document.getElementById(sectionId);
-  if (!root || root.classList.contains('versteckt')) return null;
-  const v = (role) => root.querySelector(`[data-rolle="${role}"]`)?.value.trim() || '';
+  if (!root || root.classList.contains('hidden')) return null;
+  const v = (name) => root.querySelector(`[data-role="${name}"]`)?.value.trim() || '';
   const caregiver = {
-    firstName: v('vorname'), lastName: v('nachname'), role: v('rolle'),
-    email: v('email'), mobile: v('mobil'),
+    firstName: v('firstName'), lastName: v('lastName'), role: v('role'),
+    email: v('email'), mobile: v('mobile'),
   };
-  const address = { street: v('strasse'), postcode: v('plz'), town: v('ort') };
+  const address = { street: v('street'), postcode: v('postcode'), town: v('town') };
   if (address.street || address.postcode || address.town) caregiver.address = address;
   const anything = caregiver.firstName || caregiver.lastName || caregiver.email || caregiver.mobile;
   return anything ? caregiver : null;
@@ -194,10 +198,10 @@ function readCaregiver(sectionId) {
 
 function buildSubmission() {
   const child = {
-    firstName: document.getElementById('kind-vorname').value.trim(),
-    lastName: document.getElementById('kind-nachname').value.trim(),
+    firstName: document.getElementById('child-first-name').value.trim(),
+    lastName: document.getElementById('child-last-name').value.trim(),
   };
-  const caregivers = [readCaregiver('person1'), readCaregiver('person2')].filter(Boolean);
+  const caregivers = [readCaregiver('carer1'), readCaregiver('carer2')].filter(Boolean);
   return {
     classLabel: CONTEXT.classLabel,
     schoolYear: CONTEXT.schoolYear,
@@ -206,8 +210,8 @@ function buildSubmission() {
     children: child.firstName || child.lastName ? [child] : [],
     caregivers,
     consent: {
-      classList: document.getElementById('zust-liste').checked,
-      whatsappGroup: document.getElementById('zust-whatsapp').checked,
+      classList: document.getElementById('consent-list').checked,
+      whatsappGroup: document.getElementById('consent-whatsapp').checked,
     },
   };
 }
@@ -220,11 +224,11 @@ function validate(s) {
   return null;
 }
 
-const errorBox = document.getElementById('fehler');
+const errorBox = document.getElementById('error');
 function showError(text) {
-  if (!text) { errorBox.classList.add('versteckt'); return; }
+  if (!text) { errorBox.classList.add('hidden'); return; }
   errorBox.textContent = text;
-  errorBox.classList.remove('versteckt');
+  errorBox.classList.remove('hidden');
   errorBox.scrollIntoView({ block: 'center', behavior: 'smooth' });
 }
 
@@ -232,8 +236,8 @@ function showError(text) {
 
 /** Redraws everything this script writes rather than the markup declaring. */
 function redrawScriptText() {
-  const hint = document.getElementById('empfaenger-hinweis');
-  if (hint && !document.getElementById('pruefen-bereich').classList.contains('versteckt')) {
+  const hint = document.getElementById('recipient-note');
+  if (hint && !document.getElementById('review').classList.contains('hidden')) {
     hint.textContent = RECIPIENT ? t().recipientKnown(RECIPIENT) : t().recipientEmpty;
   }
   drawOpenWarnings();
@@ -247,43 +251,43 @@ function redrawScriptText() {
  * The suggestion is still never applied automatically — it is only shown again.
  */
 function drawOpenWarnings() {
-  const box = document.getElementById('offene-warnungen');
+  const box = document.getElementById('open-warnings');
   if (!box) return;
   const open = [...fieldNotes.values()].filter((n) => n.kind === 'warn' && n.text);
-  if (open.length === 0) { box.classList.add('versteckt'); box.textContent = ''; return; }
-  box.className = 'fehler';
+  if (open.length === 0) { box.classList.add('hidden'); box.textContent = ''; return; }
+  box.className = 'error';
   box.textContent = `${t().openWarnings} ${open.map((n) => n.text()).join(' · ')}`;
 }
 
 let message = null;
 
-document.getElementById('weiter').addEventListener('click', () => {
+document.getElementById('continue').addEventListener('click', () => {
   const s = buildSubmission();
   const problem = validate(s);
   if (problem) return showError(problem);
   showError(null);
 
   message = submissionMessage(s, CONTEXT.baseUrl);
-  document.getElementById('zusammenfassung').textContent = message.text;
-  document.getElementById('formular').classList.add('versteckt');
-  document.getElementById('pruefen-bereich').classList.remove('versteckt');
+  document.getElementById('summary').textContent = message.text;
+  document.getElementById('form').classList.add('hidden');
+  document.getElementById('review').classList.remove('hidden');
   redrawScriptText();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
-document.getElementById('zurueck').addEventListener('click', () => {
-  document.getElementById('pruefen-bereich').classList.add('versteckt');
-  document.getElementById('formular').classList.remove('versteckt');
+document.getElementById('back').addEventListener('click', () => {
+  document.getElementById('review').classList.add('hidden');
+  document.getElementById('form').classList.remove('hidden');
 });
 
-document.getElementById('senden-whatsapp').addEventListener('click', () => {
+document.getElementById('send-whatsapp').addEventListener('click', () => {
   // No number in the URL means WhatsApp opens its own contact picker, which is exactly
   // what is needed when the delegates were only elected this evening.
   const target = RECIPIENT && !recipientIsEmail ? RECIPIENT.replace(/[^\d]/g, '') : '';
   location.href = `https://wa.me/${target}?text=${encodeURIComponent(message.text)}`;
 });
 
-document.getElementById('senden-mail').addEventListener('click', () => {
+document.getElementById('send-mail').addEventListener('click', () => {
   const to = RECIPIENT && recipientIsEmail ? encodeURIComponent(RECIPIENT) : '';
   const subject = encodeURIComponent(t().subject(CONTEXT.classLabel));
   location.href = `mailto:${to}?subject=${subject}&body=${encodeURIComponent(message.text)}`;

@@ -5,20 +5,20 @@
 :root {
   --ink: #17181a;
   --muted: #5f6368;
-  --linie: #d3d6da;
-  --akzent: #1f4e79;
-  --akzent-hell: #eaf1f8;
-  --grund: #fff;
-  --feld: #fff;
+  --line: #d3d6da;
+  --accent: #1f4e79;
+  --accent-soft: #eaf1f8;
+  --surface: #fff;
+  --field: #fff;
   --warn: #8a4a00;
-  --warn-grund: #fff6e8;
-  --gut: #10683a;
+  --warn-surface: #fff6e8;
+  --ok: #10683a;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --ink: #e8eaed; --muted: #a0a4a8; --linie: #3a3f45; --akzent: #7db3e8;
-    --akzent-hell: #1b2530; --grund: #14171a; --feld: #1c2024;
-    --warn: #f0b95c; --warn-grund: #2a2011; --gut: #6ecf95;
+    --ink: #e8eaed; --muted: #a0a4a8; --line: #3a3f45; --accent: #7db3e8;
+    --accent-soft: #1b2530; --surface: #14171a; --field: #1c2024;
+    --warn: #f0b95c; --warn-surface: #2a2011; --ok: #6ecf95;
   }
 }
 
@@ -29,7 +29,7 @@ body {
   margin: 0 auto;
   max-width: 34rem;
   padding: 1.25rem 1.1rem 5rem;
-  background: var(--grund);
+  background: var(--surface);
   color: var(--ink);
   /* 17px: on a phone, 16px is the floor below which iOS zooms on focus, and this form is
      read by people holding a child in the other hand. */
@@ -37,90 +37,90 @@ body {
 }
 
 h1 { font-size: 1.35rem; margin: 0 0 .2rem; letter-spacing: -.01em; }
-.kopf {
+.head {
   color: var(--muted); font-size: .92rem; margin-bottom: 1.1rem;
-  padding-bottom: .6rem; border-bottom: 2px solid var(--akzent);
+  padding-bottom: .6rem; border-bottom: 2px solid var(--accent);
   display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
 }
-.sprache {
-  background: none; border: 1px solid var(--linie); color: var(--muted);
+.language {
+  background: none; border: 1px solid var(--line); color: var(--muted);
   border-radius: 999px; padding: .2rem .6rem; font-size: .8rem; cursor: pointer;
   flex: 0 0 auto;
 }
-.sprache:hover { border-color: var(--akzent); color: var(--akzent); }
+.language:hover { border-color: var(--accent); color: var(--accent); }
 
-.einleitung { font-size: .97rem; margin: 0 0 1.4rem; }
-.einleitung a { color: var(--akzent); }
+.intro { font-size: .97rem; margin: 0 0 1.4rem; }
+.intro a { color: var(--accent); }
 
 fieldset { border: 0; padding: 0; margin: 0 0 1.5rem; }
 legend {
   font-weight: 600; font-size: 1.02rem; padding: 0; margin-bottom: .1rem;
 }
-.legende-hinweis { color: var(--muted); font-size: .85rem; margin: 0 0 .7rem; }
+.legend-note { color: var(--muted); font-size: .85rem; margin: 0 0 .7rem; }
 
 label { display: block; margin-bottom: .8rem; }
-.feldname { display: block; font-size: .82rem; color: var(--muted); margin-bottom: .2rem; }
-.pflicht { color: var(--akzent); }
+.field-label { display: block; font-size: .82rem; color: var(--muted); margin-bottom: .2rem; }
+.required { color: var(--accent); }
 
 input[type="text"], input[type="email"], input[type="tel"] {
   width: 100%; padding: .65rem .7rem; font-size: 1rem; font-family: inherit;
-  color: var(--ink); background: var(--feld);
-  border: 1px solid var(--linie); border-radius: 8px;
+  color: var(--ink); background: var(--field);
+  border: 1px solid var(--line); border-radius: 8px;
 }
-input:focus { outline: 2px solid var(--akzent); outline-offset: 1px; border-color: var(--akzent); }
+input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
 
-.paar { display: flex; gap: .7rem; }
-.paar > label { flex: 1; }
-.paar > label.schmal { flex: 0 0 6.5rem; }
+.pair { display: flex; gap: .7rem; }
+.pair > label { flex: 1; }
+.pair > label.schmal { flex: 0 0 6.5rem; }
 
-.hinweis { font-size: .84rem; margin: .25rem 0 0; }
-.hinweis.warn { color: var(--warn); }
-.hinweis.gut { color: var(--gut); }
-.hinweis button {
-  background: none; border: 0; padding: 0; font: inherit; color: var(--akzent);
+.note { font-size: .84rem; margin: .25rem 0 0; }
+.note.warn { color: var(--warn); }
+.note.ok { color: var(--ok); }
+.note button {
+  background: none; border: 0; padding: 0; font: inherit; color: var(--accent);
   text-decoration: underline; cursor: pointer;
 }
 
-.mehr {
+.more {
   display: block; width: 100%; text-align: left;
-  background: var(--akzent-hell); color: var(--akzent);
-  border: 1px dashed var(--linie); border-radius: 8px;
+  background: var(--accent-soft); color: var(--accent);
+  border: 1px dashed var(--line); border-radius: 8px;
   padding: .7rem .8rem; font: inherit; font-size: .95rem; cursor: pointer;
   margin-bottom: 1.5rem;
 }
-.mehr:hover { border-color: var(--akzent); }
+.more:hover { border-color: var(--accent); }
 
-.zustimmung { background: var(--akzent-hell); border-radius: 10px; padding: .9rem 1rem; }
-.zustimmung label {
+.consent { background: var(--accent-soft); border-radius: 10px; padding: .9rem 1rem; }
+.consent label {
   display: flex; gap: .7rem; align-items: flex-start; margin-bottom: .9rem;
   font-size: .97rem;
 }
-.zustimmung label:last-of-type { margin-bottom: 0; }
-.zustimmung input[type="checkbox"] {
-  flex: 0 0 auto; width: 1.4rem; height: 1.4rem; margin: .1rem 0 0; accent-color: var(--akzent);
+.consent label:last-of-type { margin-bottom: 0; }
+.consent input[type="checkbox"] {
+  flex: 0 0 auto; width: 1.4rem; height: 1.4rem; margin: .1rem 0 0; accent-color: var(--accent);
 }
-.zustimmung .klein { display: block; color: var(--muted); font-size: .85rem; margin-top: .15rem; }
+.consent .small { display: block; color: var(--muted); font-size: .85rem; margin-top: .15rem; }
 
-.knopf {
+.button {
   display: block; width: 100%; padding: .9rem 1rem; font: inherit; font-size: 1.05rem;
   font-weight: 600; border: 0; border-radius: 10px; cursor: pointer;
-  background: var(--akzent); color: #fff; margin-top: .5rem;
+  background: var(--accent); color: #fff; margin-top: .5rem;
 }
-.knopf:disabled { opacity: .45; cursor: not-allowed; }
-.knopf.zweit { background: var(--feld); color: var(--akzent); border: 1.5px solid var(--akzent); }
+.button:disabled { opacity: .45; cursor: not-allowed; }
+.button.zweit { background: var(--field); color: var(--accent); border: 1.5px solid var(--accent); }
 
-.fehler {
-  background: var(--warn-grund); color: var(--warn); border-radius: 8px;
+.error {
+  background: var(--warn-surface); color: var(--warn); border-radius: 8px;
   padding: .7rem .8rem; font-size: .9rem; margin-bottom: 1rem;
 }
 
 /* Review step */
-.pruefen-titel { font-size: 1.1rem; margin: 0 0 .6rem; }
-.pruefen { border: 1px solid var(--linie); border-radius: 10px; padding: 1rem; margin-bottom: 1.2rem; }
-.pruefen pre {
+.review-title { font-size: 1.1rem; margin: 0 0 .6rem; }
+.review { border: 1px solid var(--line); border-radius: 10px; padding: 1rem; margin-bottom: 1.2rem; }
+.review pre {
   margin: 0; white-space: pre-wrap; word-break: break-word;
   font: .92rem/1.5 Consolas, Menlo, monospace; color: var(--ink);
 }
-.versteckt { display: none; }
-.fuss { color: var(--muted); font-size: .82rem; margin-top: 2.5rem; }
-.fuss a { color: var(--akzent); }
+.hidden { display: none; }
+.footer { color: var(--muted); font-size: .82rem; margin-top: 2.5rem; }
+.footer a { color: var(--accent); }

@@ -6,7 +6,7 @@
   one copy per class plus a link, because a first draft carrying the whole notice measured
   468 mm against 269 mm of printable A4 — two pages per family, 580 sheets for the school.
 
-    ?klasse=Klasse+3a&jahr=2026/27&schule=Primarschule+Beispiel
+    ?class=Klasse+3a&year=2026/27&school=Primarschule+Beispiel
 -->
 <meta charset="utf-8">
 <link rel="icon" href="/favicon.svg">
@@ -26,68 +26,68 @@
   }
 
   h1 { font-family: Arial, "Helvetica Neue", sans-serif; font-size: 13.5pt; margin: 0 0 1mm; }
-  .kopf {
+  .head {
     font-family: Arial, "Helvetica Neue", sans-serif; font-size: 9pt; color: var(--muted);
     margin-bottom: 3.5mm; padding-bottom: 1.6mm; border-bottom: 1.5pt solid var(--accent);
   }
   p { margin: 0 0 2mm; }
 
-  .wege {
+  .routes {
     display: flex; gap: 5mm; align-items: center;
     border: 0.5pt solid var(--rule); padding: 2.5mm 3.5mm; margin-top: 3mm;
   }
   .qr { flex: 0 0 24mm; height: 24mm; border: 0.5pt dashed var(--rule);
         display: grid; place-items: center; text-align: center;
         font: 7pt/1.15 Arial, "Helvetica Neue", sans-serif; color: var(--muted); }
-  .wege > div:last-child { font-size: 9.5pt; }
+  .routes > div:last-child { font-size: 9.5pt; }
   .link { font-family: Consolas, Menlo, monospace; font-size: 9pt; word-break: break-all; }
 
-  .schnitt { margin: 5mm 0 4mm; border-top: 0.75pt dashed #888; height: 0; position: relative; }
-  .schnitt::before { content: "✂"; position: absolute; top: -5.5pt; left: 0;
+  .cut { margin: 5mm 0 4mm; border-top: 0.75pt dashed #888; height: 0; position: relative; }
+  .cut::before { content: "✂"; position: absolute; top: -5.5pt; left: 0;
                      background: #fff; padding-right: 2mm; font-size: 9pt; color: #888; }
 
-  .formular { font-family: Arial, "Helvetica Neue", sans-serif; font-size: 9.5pt; }
-  .formular h2 { font-size: 11.5pt; margin: 0 0 1mm; }
-  .zeile { display: flex; gap: 4mm; margin-bottom: 3mm; }
-  .feld { flex: 1; }
-  .feld.s { flex: 0 0 22mm; }
-  .feld.m { flex: 0 0 44mm; }
-  .feld label { display: block; font-size: 7.5pt; text-transform: uppercase;
+  .form { font-family: Arial, "Helvetica Neue", sans-serif; font-size: 9.5pt; }
+  .form h2 { font-size: 11.5pt; margin: 0 0 1mm; }
+  .row { display: flex; gap: 4mm; margin-bottom: 3mm; }
+  .field { flex: 1; }
+  .field.s { flex: 0 0 22mm; }
+  .field.m { flex: 0 0 44mm; }
+  .field label { display: block; font-size: 7.5pt; text-transform: uppercase;
                 letter-spacing: 0.05em; color: var(--muted); margin-bottom: 0.4mm; }
-  .feld .linie { border-bottom: 0.5pt solid #8a8a8a; height: 5.2mm; }
-  .gruppe { font-size: 8.5pt; font-weight: 700; margin: 2.5mm 0 1.2mm;
+  .field .line { border-bottom: 0.5pt solid #8a8a8a; height: 5.2mm; }
+  .group { font-size: 8.5pt; font-weight: 700; margin: 2.5mm 0 1.2mm;
             padding-bottom: 0.5mm; border-bottom: 0.5pt solid var(--rule); }
-  .gruppe span { font-weight: 400; color: var(--muted); }
-  .klein { font-size: 8pt; color: var(--muted); margin: 0 0 2mm; }
+  .group span { font-weight: 400; color: var(--muted); }
+  .small { font-size: 8pt; color: var(--muted); margin: 0 0 2mm; }
 
-  .einwilligung { border: 0.75pt solid var(--ink); padding: 2.5mm 3mm; margin: 3mm 0; }
-  .einwilligung .z { display: flex; gap: 2.5mm; align-items: flex-start; margin-bottom: 2mm; }
-  .einwilligung .z:last-of-type { margin-bottom: 0; }
-  .kasten { flex: 0 0 3.8mm; height: 3.8mm; border: 0.75pt solid var(--ink); margin-top: 0.3mm; }
+  .consent { border: 0.75pt solid var(--ink); padding: 2.5mm 3mm; margin: 3mm 0; }
+  .consent .z { display: flex; gap: 2.5mm; align-items: flex-start; margin-bottom: 2mm; }
+  .consent .z:last-of-type { margin-bottom: 0; }
+  .box { flex: 0 0 3.8mm; height: 3.8mm; border: 0.75pt solid var(--ink); margin-top: 0.3mm; }
 
-  .fuss { display: flex; justify-content: space-between; font-size: 7.5pt; color: var(--muted);
+  .footer { display: flex; justify-content: space-between; font-size: 7.5pt; color: var(--muted);
           margin-top: 2.5mm; padding-top: 1.2mm; border-top: 0.5pt solid var(--rule); }
 
-  .delegierte { margin-top: 4mm; border: 0.75pt solid var(--accent); background: #f4f7fa;
+  .delegates { margin-top: 4mm; border: 0.75pt solid var(--accent); background: #f4f7fa;
                 padding: 2.5mm 3.5mm; display: flex; gap: 5mm; align-items: center;
                 font-family: Arial, "Helvetica Neue", sans-serif; font-size: 9pt; }
-  .delegierte strong { color: var(--accent); }
+  .delegates strong { color: var(--accent); }
 
   @media screen {
     body { padding: 14mm 16mm; box-shadow: 0 0 0 1px #e3e3e3; margin-block: 8mm; }
-    .hinweis-druck { max-width: 178mm; margin: 0 auto; padding-top: 4mm;
+    .print-hint { max-width: 178mm; margin: 0 auto; padding-top: 4mm;
                      font: 9pt/1.4 Arial, "Helvetica Neue", sans-serif; color: #666; }
   }
-  @media print { .hinweis-druck { display: none; } body { padding: 0; max-width: none; } }
+  @media print { .print-hint { display: none; } body { padding: 0; max-width: none; } }
 </style>
 
-<div class="hinweis-druck">Vorschau. Drucken mit Strg/Cmd + P, Skalierung 100 %.</div>
+<div class="print-hint">Vorschau. Drucken mit Strg/Cmd + P, Skalierung 100 %.</div>
 
 <body>
   <h1>Kontaktangaben für die Klasse</h1>
-  <div class="kopf">
-    Elternrat <span data-feld="schule">Schule Bungertwies</span> ·
-    <span data-feld="klasse">Klasse 3a</span> · Schuljahr <span data-feld="jahr">2026/27</span>
+  <div class="head">
+    Elternrat <span data-field="school">Schule Bungertwies</span> ·
+    <span data-field="class">Klasse 3a</span> · Schuljahr <span data-field="year">2026/27</span>
   </div>
 
   <p>
@@ -98,89 +98,89 @@
     Ihrer Klasse, nicht bei der Schule und nicht beim Vorstand des Elternrats.</strong>
   </p>
 
-  <div class="wege">
-    <div class="qr" data-qr="formular"></div>
+  <div class="routes">
+    <div class="qr" data-qr="form"></div>
     <div>
       <strong>Online in zwei Minuten:</strong> Code scannen oder eintippen —
-      <span class="link" data-feld="formularlink"></span><br>
+      <span class="link" data-field="formLink"></span><br>
       <strong>Auf Papier:</strong> unteren Teil ausfüllen, abtrennen, den Delegierten abgeben.<br>
       Vollständiges Merkblatt zum Datenschutz:
-      <span class="link" data-feld="merkblattlink"></span>
+      <span class="link" data-field="noticeLink"></span>
     </div>
   </div>
 
-  <div class="schnitt"></div>
+  <div class="cut"></div>
 
-  <div class="formular">
-    <h2><span data-feld="klasse">Klasse 3a</span> · Schuljahr <span data-feld="jahr">2026/27</span>
-      <span class="klein" style="font-weight:400">— Blockschrift bitte</span></h2>
-    <p class="klein">
+  <div class="form">
+    <h2><span data-field="class">Klasse 3a</span> · Schuljahr <span data-field="year">2026/27</span>
+      <span class="small" style="font-weight:400">— Blockschrift bitte</span></h2>
+    <p class="small">
       Pflicht sind nur der Name des Kindes und eine Kontaktmöglichkeit. Alles andere ist
       freiwillig: füllen Sie aus, was Sie teilen möchten.
     </p>
 
-    <div class="zeile">
-      <div class="feld"><label>Kind — Vorname</label><div class="linie"></div></div>
-      <div class="feld"><label>Kind — Name</label><div class="linie"></div></div>
+    <div class="row">
+      <div class="field"><label>Kind — Vorname</label><div class="line"></div></div>
+      <div class="field"><label>Kind — Name</label><div class="line"></div></div>
     </div>
 
-    <div class="gruppe">Elternteil / Bezugsperson 1</div>
-    <div class="zeile">
-      <div class="feld"><label>Vorname</label><div class="linie"></div></div>
-      <div class="feld"><label>Name</label><div class="linie"></div></div>
-      <div class="feld s"><label>Rolle</label><div class="linie"></div></div>
+    <div class="group">Elternteil / Bezugsperson 1</div>
+    <div class="row">
+      <div class="field"><label>Vorname</label><div class="line"></div></div>
+      <div class="field"><label>Name</label><div class="line"></div></div>
+      <div class="field s"><label>Rolle</label><div class="line"></div></div>
     </div>
-    <div class="zeile">
-      <div class="feld"><label>E-Mail</label><div class="linie"></div></div>
-      <div class="feld m"><label>Mobile</label><div class="linie"></div></div>
+    <div class="row">
+      <div class="field"><label>E-Mail</label><div class="line"></div></div>
+      <div class="field m"><label>Mobile</label><div class="line"></div></div>
     </div>
-    <div class="zeile">
-      <div class="feld"><label>Strasse und Nummer (freiwillig)</label><div class="linie"></div></div>
-      <div class="feld s"><label>PLZ</label><div class="linie"></div></div>
-      <div class="feld m"><label>Ort</label><div class="linie"></div></div>
-    </div>
-
-    <div class="gruppe">Elternteil / Bezugsperson 2 <span>— optional</span></div>
-    <div class="zeile">
-      <div class="feld"><label>Vorname</label><div class="linie"></div></div>
-      <div class="feld"><label>Name</label><div class="linie"></div></div>
-      <div class="feld s"><label>Rolle</label><div class="linie"></div></div>
-    </div>
-    <div class="zeile">
-      <div class="feld"><label>E-Mail</label><div class="linie"></div></div>
-      <div class="feld m"><label>Mobile</label><div class="linie"></div></div>
-    </div>
-    <div class="zeile">
-      <div class="feld"><label>Strasse und Nummer (freiwillig)</label><div class="linie"></div></div>
-      <div class="feld s"><label>PLZ</label><div class="linie"></div></div>
-      <div class="feld m"><label>Ort</label><div class="linie"></div></div>
+    <div class="row">
+      <div class="field"><label>Strasse und Nummer (freiwillig)</label><div class="line"></div></div>
+      <div class="field s"><label>PLZ</label><div class="line"></div></div>
+      <div class="field m"><label>Ort</label><div class="line"></div></div>
     </div>
 
+    <div class="group">Elternteil / Bezugsperson 2 <span>— optional</span></div>
+    <div class="row">
+      <div class="field"><label>Vorname</label><div class="line"></div></div>
+      <div class="field"><label>Name</label><div class="line"></div></div>
+      <div class="field s"><label>Rolle</label><div class="line"></div></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>E-Mail</label><div class="line"></div></div>
+      <div class="field m"><label>Mobile</label><div class="line"></div></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Strasse und Nummer (freiwillig)</label><div class="line"></div></div>
+      <div class="field s"><label>PLZ</label><div class="line"></div></div>
+      <div class="field m"><label>Ort</label><div class="line"></div></div>
+    </div>
 
-    <div class="einwilligung">
+
+    <div class="consent">
       <div class="z">
-        <div class="kasten"></div>
+        <div class="box"></div>
         <div><strong>Ja</strong>, meine Angaben dürfen in die Kontaktliste dieser Klasse
           aufgenommen werden, die alle Eltern der Klasse erhalten.</div>
       </div>
       <div class="z">
-        <div class="kasten"></div>
+        <div class="box"></div>
         <div><strong>Ja</strong>, ich möchte in die WhatsApp-Gruppe der Klasse. Dort sehen
           alle Mitglieder meine Telefonnummer.</div>
       </div>
-      <p class="klein" style="margin: 2mm 0 0">
+      <p class="small" style="margin: 2mm 0 0">
         Gilt für die oben genannten Personen. Ohne Kreuz erscheinen Sie auf keiner Liste
         und werden nur direkt kontaktiert.
       </p>
     </div>
 
-    <div class="zeile">
-      <div class="feld m"><label>Datum</label><div class="linie"></div></div>
+    <div class="row">
+      <div class="field m"><label>Datum</label><div class="line"></div></div>
     </div>
 
-    <div class="fuss">
-      <span data-feld="schule">Schule Bungertwies</span>
-      <span>Merkblatt-Version <span data-feld="version">2026-08-1</span></span>
+    <div class="footer">
+      <span data-field="school">Schule Bungertwies</span>
+      <span>Merkblatt-Version <span data-field="version">2026-08-1</span></span>
     </div>
   </div>
 
@@ -191,33 +191,35 @@
   import { parseClassName } from '../core/classname.js';
 
   const p = new URLSearchParams(location.search);
-  const basis = (p.get('basis') || 'https://bungi-eltern.mrpia.ch').replace(/\/$/, '');
-  const klasse = p.get('klasse') || 'Klasse 3a';
+  const base = (p.get('base') || 'https://bungi-eltern.mrpia.ch').replace(/\/$/, '');
+  const classLabel = p.get('class') || 'Klasse 3a';
   // The slug comes from the class name itself, so the only parameter that has to be right
   // is the one a human types.
-  const slug = parseClassName(klasse).slug || 'klasse';
+  const slug = parseClassName(classLabel).slug || 'class';
 
-  const ziele = {
-    formular:  `${basis}/f/${slug}`,
-    merkblatt: `${basis}/merkblatt`,
+  const targets = {
+    form:   `${base}/f/${slug}`,
+    notice: `${base}/merkblatt`,
   };
-  const kurz = (u) => u.replace(/^https?:\/\//, '');
+  const withoutScheme = (u) => u.replace(/^https?:\/\//, '');
 
-  const werte = {
-    klasse,
-    jahr: p.get('jahr') || '2026/27',
-    schule: p.get('schule') || 'Schule Bungertwies',
+  // Keys here must match the data-field values in the markup above.
+  const values = {
+    class: classLabel,
+    year: p.get('year') || '2026/27',
+    school: p.get('school') || 'Schule Bungertwies',
     version: p.get('version') || '2026-08-1',
-    formularlink: kurz(ziele.formular),
-    merkblattlink: kurz(ziele.merkblatt),
+    formLink: withoutScheme(targets.form),
+    noticeLink: withoutScheme(targets.notice),
   };
-  for (const el of document.querySelectorAll('[data-feld]')) {
-    const v = p.get(el.dataset.feld) ?? werte[el.dataset.feld];
+  for (const el of document.querySelectorAll('[data-field]')) {
+    const v = p.get(el.dataset.field) ?? values[el.dataset.field];
     if (v) el.textContent = v;
   }
   for (const el of document.querySelectorAll('[data-qr]')) {
-    el.innerHTML = qrSvg(ziele[el.dataset.qr], { title: ziele[el.dataset.qr] });
+    const url = targets[el.dataset.qr];
+    el.innerHTML = qrSvg(url, { title: url });
     el.style.border = 'none';
   }
-  document.title = 'Elternblatt ' + klasse;
+  document.title = 'Elternblatt ' + classLabel;
 </script>

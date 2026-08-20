@@ -46,9 +46,20 @@ test('payload: never throws on the junk that arrives via WhatsApp', () => {
   }
 });
 
+test('payload: the wire format is readable, with no translation table', () => {
+  const wire = JSON.parse(Buffer.from(encodeSubmission(example), 'base64url').toString());
+  assert.deepEqual(Object.keys(wire).sort(),
+    ['caregivers', 'children', 'classLabel', 'consent', 'date', 'noticeVersion',
+     'schoolYear', 'version']);
+  assert.equal(wire.caregivers[0].firstName, 'Sophie');
+  assert.equal(wire.consent.classList, true);
+  // Empty fields are dropped rather than written as "".
+  assert.ok(!('address' in wire.caregivers[1]), 'Marc gave no address, so no empty key');
+});
+
 test('payload: a future version is refused rather than half-read', () => {
   const wire = JSON.parse(Buffer.from(encodeSubmission(example), 'base64url').toString());
-  wire.v = PAYLOAD_VERSION + 1;
+  wire.version = PAYLOAD_VERSION + 1;
   const future = Buffer.from(JSON.stringify(wire)).toString('base64url');
   const r = decodeSubmission(future);
   assert.equal(r.ok, false);
@@ -84,5 +95,5 @@ test('payload: stays short enough to travel as a tappable link', () => {
   // WhatsApp handles long links, but a message that wraps over many lines looks broken and
   // invites people to "clean it up". Keep the whole thing inside a few hundred characters.
   const { link } = submissionMessage(example, 'https://bungi-eltern.mrpia.ch');
-  assert.ok(link.length < 700, `link is ${link.length} characters`);
+  assert.ok(link.length < 1200, `link is ${link.length} characters`);
 });

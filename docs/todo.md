@@ -117,6 +117,9 @@ in [`docs/hosting.md`](hosting.md) if a second subdomain is ever set up.)*
 ## Ground rules worth not rediscovering
 
 - **English for developers, German for parents and delegates.** See the README.
+- **Asset URLs carry a content hash.** HTML and JS cache separately, so without it a
+  delegate can run a stale script against a fresh page. Any new asset the build emits needs
+  the same treatment.
 - **No `connect-src` in any CSP.** It is the one load-bearing promise: the pages cannot send
   a class's data anywhere. Loading a library or an icon from a CDN breaks it.
 - **Normalise on the way in, never in a renderer.** `ingestSubmission()` does it, so no
