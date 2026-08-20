@@ -46,7 +46,7 @@ exist first.
 6. Year-end: final export, then delete, with a dated record
 
 `src/core/vcard.js` already renders cards; only the consent filter and the file assembly are
-missing. `fuerKlassenliste()` and `fehlendeKinder()` in `model.js` supply items 1 and 4.
+missing. `forClassList()` and `missingChildren()` in `model.js` supply items 1 and 4.
 
 **Done when:** a class list, a `.vcf` and both CSVs come out of a project with one click
 each, and nothing without recorded consent appears in any of them.
@@ -119,7 +119,7 @@ in [`docs/hosting.md`](hosting.md) if a second subdomain is ever set up.)*
 - **English for developers, German for parents and delegates.** See the README.
 - **No `connect-src` in any CSP.** It is the one load-bearing promise: the pages cannot send
   a class's data anywhere. Loading a library or an icon from a CDN breaks it.
-- **Normalise on the way in, never in a renderer.** `einreichungAufnehmen()` does it, so no
+- **Normalise on the way in, never in a renderer.** `ingestSubmission()` does it, so no
   output has to wonder whether a value is clean.
 - **Consent absent is "unknown", never "no".** Old lists and WhatsApp groups arrive without
   consent, stay out of everything shared, and get flagged for asking.

@@ -29,11 +29,11 @@ const cfg = JSON.parse(await readFile(join(ROOT, 'site.config.json'), 'utf8'));
  * So anything that comes from site.config.json is substituted here. Runtime parameters
  * still override, they just no longer have to be present.
  */
-function fillDefaults(text, werte) {
+function fillDefaults(text, values) {
   return text.replace(
     /<(span|div)([^>]*?)data-feld="([a-z]+)"([^>]*?)><\/\1>/g,
-    (whole, tag, pre, feld, post) =>
-      werte[feld] === undefined ? whole : `<${tag}${pre}data-feld="${feld}"${post}>${werte[feld]}</${tag}>`,
+    (whole, tag, pre, field, post) =>
+      values[field] === undefined ? whole : `<${tag}${pre}data-feld="${field}"${post}>${values[field]}</${tag}>`,
   );
 }
 
@@ -89,17 +89,17 @@ const shell = (title, body, extraHead = '') => `<meta charset="utf-8">
 ${extraHead}
 <body>
 ${body}
-<p class="fuss">Elternrat ${cfg.schule} · Schuljahr ${cfg.schuljahr} ·
-  <a href="/merkblatt/">Merkblatt</a> · ${cfg.kontakt}</p>
+<p class="fuss">Elternrat ${cfg.school} · Schuljahr ${cfg.schoolYear} ·
+  <a href="/merkblatt/">Merkblatt</a> · ${cfg.contact}</p>
 </body>`;
 
 const stub = (title, wer) => shell(title, `<h1>${title}</h1>
-<div class="kopf">Elternrat ${cfg.schule}</div>
+<div class="kopf">Elternrat ${cfg.school}</div>
 <div class="kasten">
   <strong>Diese Seite wird gerade gebaut.</strong>
   <p style="margin:.5rem 0 0">Sie ist ${wer} gedacht und in wenigen Tagen bereit.
   Wenn Sie hier gelandet sind und etwas brauchen, schreiben Sie an
-  <a href="mailto:${cfg.kontakt}">${cfg.kontakt}</a>.</p>
+  <a href="mailto:${cfg.contact}">${cfg.contact}</a>.</p>
 </div>
 <p>Bereits verfügbar: das <a href="/merkblatt/">Merkblatt zum Umgang mit Ihren
 Kontaktangaben</a>.</p>`);
@@ -108,15 +108,15 @@ Kontaktangaben</a>.</p>`);
 
 await rm(OUT, { recursive: true, force: true });
 
-const klassen = cfg.klassen
-  .map((k) => ({ ...k, parsed: parseClassName(k.name) }))
+const classes = cfg.classes
+  .map((c) => ({ ...c, parsed: parseClassName(c.name) }))
   .sort((a, b) => compareClasses(a.parsed, b.parsed));
 
-const bad = klassen.filter((k) => !k.parsed.ok);
-if (bad.length) throw new Error(`unreadable class names: ${bad.map((k) => k.name).join(', ')}`);
+const bad = classes.filter((c) => !c.parsed.ok);
+if (bad.length) throw new Error(`unreadable class names: ${bad.map((c) => c.name).join(', ')}`);
 
 // Host plumbing. .nojekyll matters: without it GitHub Pages hides files starting with _.
-await write('CNAME', new URL(cfg.basis).hostname + '\n');
+await write('CNAME', new URL(cfg.baseUrl).hostname + '\n');
 await write('.nojekyll', '');
 await write('robots.txt', 'User-agent: *\nDisallow: /\n');
 await copyFile(join(SRC, 'site/favicon.svg'), join(OUT, 'favicon.svg'));
@@ -126,16 +126,16 @@ await copyDir('vendor', 'assets/vendor');
 
 // Printable sheets keep their own filenames; they are opened from the kit page.
 // Per-class values (klasse, anzahl) stay dynamic; everything site-wide is baked in.
-const seitenWerte = {
-  schule: cfg.schule,
-  jahr: cfg.schuljahr,
-  kontakt: cfg.kontakt,
-  version: cfg.merkblattVersion,
+const siteValues = {
+  schule: cfg.school,
+  jahr: cfg.schoolYear,
+  kontakt: cfg.contact,
+  version: cfg.noticeVersion,
 };
-const vorbereiten = (text) => fillDefaults(absolutise(text), seitenWerte);
+const prepare = (text) => fillDefaults(absolutise(text), siteValues);
 
-await copyDir('kit', 'kit', vorbereiten);
-await write('merkblatt/index.html', vorbereiten(await readFile(join(SRC, 'kit/merkblatt.html'), 'utf8')));
+await copyDir('kit', 'kit', prepare);
+await write('merkblatt/index.html', prepare(await readFile(join(SRC, 'kit/merkblatt.html'), 'utf8')));
 
 // Pages not written yet. Stubs rather than 404s, so the domain and the certificate can
 // go live now and the printed URLs are never dead.
@@ -145,25 +145,25 @@ await write('w/index.html', stub('Werkstatt', 'für die Klassendelegierten zum E
 // The parent form: one page per class. The class is written into <meta> tags rather than a
 // query string, so the page needs no inline script and its CSP can stay script-src 'self'.
 // Only the shared assets go to /assets/f/; index.html is a template, not a served page.
-for (const datei of ['formular.css', 'formular.js']) {
-  await write(join('assets/f', datei), absolutise(await readFile(join(SRC, 'f', datei), 'utf8')));
+for (const file of ['formular.css', 'formular.js']) {
+  await write(join('assets/f', file), absolutise(await readFile(join(SRC, 'f', file), 'utf8')));
 }
-const formularVorlage = await readFile(join(SRC, 'f/index.html'), 'utf8');
-for (const k of klassen) {
-  const seite = formularVorlage
-    .replace('<meta name="kk-klasse" content="Klasse 3a">', `<meta name="kk-klasse" content="${k.parsed.display}">`)
-    .replace('<meta name="kk-slug" content="3a">', `<meta name="kk-slug" content="${k.parsed.slug}">`)
-    .replace('<meta name="kk-jahr" content="2026/27">', `<meta name="kk-jahr" content="${cfg.schuljahr}">`)
-    .replace('<meta name="kk-schule" content="Schule Bungertwies">', `<meta name="kk-schule" content="${cfg.schule}">`)
-    .replace('<meta name="kk-merkblatt" content="2026-08-1">', `<meta name="kk-merkblatt" content="${cfg.merkblattVersion}">`)
-    .replace('<meta name="kk-basis" content="https://bungi-eltern.mrpia.ch">', `<meta name="kk-basis" content="${cfg.basis}">`);
-  await write(`f/${k.parsed.slug}/index.html`, seite);
+const formTemplate = await readFile(join(SRC, 'f/index.html'), 'utf8');
+for (const c of classes) {
+  const seite = formTemplate
+    .replace('<meta name="kk-klasse" content="Klasse 3a">', `<meta name="kk-klasse" content="${c.parsed.display}">`)
+    .replace('<meta name="kk-slug" content="3a">', `<meta name="kk-slug" content="${c.parsed.slug}">`)
+    .replace('<meta name="kk-jahr" content="2026/27">', `<meta name="kk-jahr" content="${cfg.schoolYear}">`)
+    .replace('<meta name="kk-schule" content="Schule Bungertwies">', `<meta name="kk-schule" content="${cfg.school}">`)
+    .replace('<meta name="kk-merkblatt" content="2026-08-1">', `<meta name="kk-merkblatt" content="${cfg.noticeVersion}">`)
+    .replace('<meta name="kk-basis" content="https://bungi-eltern.mrpia.ch">', `<meta name="kk-basis" content="${cfg.baseUrl}">`);
+  await write(`f/${c.parsed.slug}/index.html`, seite);
 }
 
 // Landing page.
-await write('index.html', shell(`Elternrat ${cfg.schule}`, `<h1>Elternrat ${cfg.schule}</h1>
-<div class="kopf">Kontaktangaben der Klasseneltern · Schuljahr ${cfg.schuljahr}</div>
-<p>Diese Seite gehört dem Elternrat der ${cfg.schule}. Sie hilft den Klassendelegierten,
+await write('index.html', shell(`Elternrat ${cfg.school}`, `<h1>Elternrat ${cfg.school}</h1>
+<div class="kopf">Kontaktangaben der Klasseneltern · Schuljahr ${cfg.schoolYear}</div>
+<p>Diese Seite gehört dem Elternrat der ${cfg.school}. Sie hilft den Klassendelegierten,
 die Kontaktangaben ihrer Klasseneltern zu sammeln — freiwillig, und nur mit
 Einverständnis.</p>
 <div class="kasten">
@@ -183,23 +183,23 @@ Elternabend.</p>`));
 
 // Interim kit page: the batch generator will replace the link list with a print-all run.
 await write('kit/index.html', shell('Kit: Blätter für den Elternabend', `<h1>Blätter für den Elternabend</h1>
-<div class="kopf">Intern · Elternrat ${cfg.schule} · ${klassen.length} Klassen</div>
+<div class="kopf">Intern · Elternrat ${cfg.school} · ${classes.length} Klassen</div>
 <p style="color:var(--muted);font-size:.9rem">Pro Klasse ein Lehrblatt und ein Elternblatt.
 Öffnen, mit Strg/Cmd + P als PDF speichern, Skalierung 100 %.</p>
 <table style="width:100%;border-collapse:collapse;font-size:.95rem">
 <tr style="text-align:left"><th>Klasse</th><th>Lehrblatt</th><th>Elternblatt</th><th>Formular</th></tr>
-${klassen.map((k) => {
-  const q = `klasse=${encodeURIComponent(k.parsed.display)}&jahr=${encodeURIComponent(cfg.schuljahr)}` +
-            `&schule=${encodeURIComponent(cfg.schule)}&kontakt=${encodeURIComponent(cfg.kontakt)}` +
-            `&version=${encodeURIComponent(cfg.merkblattVersion)}&anzahl=${k.anzahl}` +
-            `&basis=${encodeURIComponent(cfg.basis)}`;
-  return `<tr style="border-top:1px solid #ccc"><td>${k.parsed.display}</td>` +
+${classes.map((c) => {
+  const q = `klasse=${encodeURIComponent(c.parsed.display)}&jahr=${encodeURIComponent(cfg.schoolYear)}` +
+            `&schule=${encodeURIComponent(cfg.school)}&kontakt=${encodeURIComponent(cfg.contact)}` +
+            `&version=${encodeURIComponent(cfg.noticeVersion)}&anzahl=${c.count}` +
+            `&basis=${encodeURIComponent(cfg.baseUrl)}`;
+  return `<tr style="border-top:1px solid #ccc"><td>${c.parsed.display}</td>` +
     `<td><a href="/kit/lehrblatt.html?${q}">öffnen</a></td>` +
     `<td><a href="/kit/blatt.html?${q}">öffnen</a></td>` +
-    `<td><a href="/f/${k.parsed.slug}/">/f/${k.parsed.slug}/</a></td></tr>`;
+    `<td><a href="/f/${c.parsed.slug}/">/f/${c.parsed.slug}/</a></td></tr>`;
 }).join('\n')}
 </table>`));
 
 const count = (await readdir(OUT, { recursive: true })).length;
-console.log(`site/ built: ${count} entries, ${klassen.length} classes`);
-console.log('classes in order:', klassen.map((k) => k.parsed.display).join(', '));
+console.log(`site/ built: ${count} entries, ${classes.length} classes`);
+console.log('classes in order:', classes.map((c) => c.parsed.display).join(', '));

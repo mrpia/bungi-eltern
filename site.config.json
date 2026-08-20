@@ -1,62 +1,62 @@
 {
-  "schule": "Schule Bungertwies",
-  "schuljahr": "2026/27",
-  "basis": "https://bungi-eltern.mrpia.ch",
-  "kontakt": "pa.galiana@gmail.com",
-  "merkblattVersion": "2026-08-1",
+  "school": "Schule Bungertwies",
+  "schoolYear": "2026/27",
+  "baseUrl": "https://bungi-eltern.mrpia.ch",
+  "contact": "pa.galiana@gmail.com",
+  "noticeVersion": "2026-08-1",
   "_classListNote": "TODO Pierre-Arnaud: please confirm. Guessed: 13 classes, not every year is split into a/b.",
-  "klassen": [
+  "classes": [
     {
       "name": "KiGa 1",
-      "anzahl": 22
+      "count": 22
     },
     {
       "name": "KiGa 2",
-      "anzahl": 22
+      "count": 22
     },
     {
       "name": "KiGa 3",
-      "anzahl": 22
+      "count": 22
     },
     {
       "name": "Klasse 1a",
-      "anzahl": 22
+      "count": 22
     },
     {
       "name": "Klasse 1b",
-      "anzahl": 22
+      "count": 22
     },
     {
       "name": "Klasse 2a",
-      "anzahl": 22
+      "count": 22
     },
     {
       "name": "Klasse 2b",
-      "anzahl": 22
+      "count": 22
     },
     {
       "name": "Klasse 3a",
-      "anzahl": 22
+      "count": 22
     },
     {
       "name": "Klasse 3b",
-      "anzahl": 22
+      "count": 22
     },
     {
       "name": "Klasse 4a",
-      "anzahl": 22
+      "count": 22
     },
     {
       "name": "Klasse 4b",
-      "anzahl": 22
+      "count": 22
     },
     {
       "name": "Klasse 5",
-      "anzahl": 22
+      "count": 22
     },
     {
       "name": "Klasse 6",
-      "anzahl": 22
+      "count": 22
     }
   ]
 }

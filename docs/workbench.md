@@ -3,11 +3,6 @@
 Goal: this file should be enough to build `/w/` in a fresh session without knowing how the
 project got here. Where a decision looks open, it has been made here.
 
-> **Note on identifiers.** Function and field names in `src/core/model.js` and
-> `src/core/payload.js` are currently German (`einreichungAufnehmen`, `fehlendeKinder`).
-> They are quoted verbatim below so the spec matches the code. A rename to English is under
-> consideration; if it happens, this table changes with it.
-
 ## Purpose
 
 The workbench is the delegates' tool. It takes in parents' submissions, holds the class
@@ -55,18 +50,18 @@ Parents send a message containing a readable block and, below it, a link of the 
    button — on a shared family laptop that is another family's contact details sitting in a
    history other people can see. This is the step most likely to be forgotten when
    rebuilding.
-3. If decoding fails, show the reason (`r.reason`) plus a note that the readable part of the
+3. If decoding fails, show `r.text` (a German sentence; `r.code` is there for branching) plus a note that the readable part of the
    message can be typed in by hand. Never a blank page.
 4. On success do **not** store immediately. Show a confirmation step: `readableSummary()`
    of the submission, and below it what taking it in would do. Get that by running
-   `einreichungAufnehmen()` against a **copy** of the project (`structuredClone`) and
-   displaying `ergebnis` and `aenderungen`:
-   - `neu` → "New family: Léa Müller"
-   - `ergaenzt` → the list from `aenderungen`, i.e. exactly what changes
-   - `unveraendert` → "These details are already recorded"
+   `ingestSubmission()` against a **copy** of the project (`structuredClone`) and
+   displaying `outcome` and `changes`:
+   - `new` → "New family: Léa Müller"
+   - `updated` → the list from `changes`, which are ready-made German sentences
+   - `unchanged` → "These details are already recorded"
 5. Only on click, run the same function against the real project and save.
-6. Always show `hinweise` from the result (unreadable numbers, suspected typos). Never
-   correct them automatically.
+6. Always show `notes` from the result — each is `{code, text}`, covering unreadable
+   numbers and suspected typos. Never correct them automatically.
 
 ### Class does not match
 
@@ -82,16 +77,16 @@ Source of truth in daily use is IndexedDB. The project file is backup and migrat
 ```
 Database:  klassenkontakte
 Version:   1
-Store:     projekte, keyPath 'slug'        // '3a', 'kiga1', ...
-Record:    { slug, projekt, gespeichert }  // projekt = the object from model.js
+Store:     projects, keyPath 'slug'      // '3a', 'kiga1', ...
+Record:    { slug, project, savedAt }    // project = the object from model.js
 ```
 
 - Autosave after **every** change, debounced by 500 ms. Delegates must not lose work because
   they forgot to save.
 - Visible state in the page header: "Saved 14:32" or "Not saved".
-- Project file: `projektNachJson()`, downloaded as
+- Project file: `projectToJson()`, downloaded as
   `klassenkontakte-<slug>-<YYYY-MM-DD>.json`.
-- Loading: `<input type="file">`, `projektAusJson()`, then **confirm with counts** ("File
+- Loading: `<input type="file">`, `projectFromJson()`, then **confirm with counts** ("File
   contains 18 families, 4 are open. Replace?"). v1 **replaces**, it does not merge: merging
   two datasets is its own task and nobody needs it in the first year.
 - **No File System Access API.** `docs/technical-decisions.md` holds it out as a
@@ -131,23 +126,23 @@ opens a fresh empty form, because a delegate at the kitchen table types twenty s
 **Changing consent.** Toggleable directly in the list, with the date of the change recorded
 in the log. A withdrawal by phone must be recordable in ten seconds.
 
-**Deleting.** A single person (`personLoeschen()`, which also clears orphaned children) and
+**Deleting.** A single person (`deleteCaregiver()`, which also clears orphaned children) and
 "delete everything", confirmed by typing the class name.
 
 ## Functions to use
 
 All from `src/core/`. Do not rebuild any of it, and **do not normalise again**:
-`einreichungAufnehmen()` does that on the way in, so that no output ever sees raw input.
+`ingestSubmission()` does that on the way in, so that no output ever sees raw input.
 
 | Function | Module | For |
 |---|---|---|
 | `decodeSubmission` | payload.js | unpack the link, never throws |
 | `readableSummary` | payload.js | the confirmation step |
-| `neuesProjekt`, `einreichungAufnehmen` | model.js | project and intake |
-| `personenFuerKind` | model.js | grouping by child |
-| `fuerKlassenliste`, `fuerWhatsapp`, `einwilligungOffen` | model.js | counters and filters |
-| `fehlendeKinder` | model.js | chase list (needs the class roster as input) |
-| `projektNachJson`, `projektAusJson`, `personLoeschen` | model.js | file and deletion |
+| `newProject`, `ingestSubmission` | model.js | project and intake |
+| `caregiversForChild` | model.js | grouping by child |
+| `forClassList`, `forWhatsappGroup`, `consentUnrecorded` | model.js | counters and filters |
+| `missingChildren` | model.js | chase list (needs the class roster as input) |
+| `projectToJson`, `projectFromJson`, `deleteCaregiver` | model.js | file and deletion |
 | `parseClassName`, `compareClasses` | classname.js | class picker, sorting |
 
 ## Acceptance checks
@@ -158,7 +153,7 @@ A fresh implementation is done when all of this can be walked through by hand:
    `/w/` → the confirmation step shows exactly that family.
 2. After taking it in, `location.hash` is **empty**, and the back button does not bring the
    payload back.
-3. A second submission for the same family with a changed number → `ergaenzt`, the change is
+3. A second submission for the same family with a changed number → `updated`, the change is
    shown in plain words before it is applied, no duplicate.
 4. A second submission naming only one of two people → the other person is untouched.
 5. Reload the page → everything is still there, without anyone having saved.
@@ -166,6 +161,6 @@ A fresh implementation is done when all of this can be walked through by hand:
 7. Open a broken link (`#d=nonsense`) → an understandable message, not a blank page.
 8. A submission from `/f/3a/` while a KiGa 1 project is open → warning, no silent intake.
 9. Record a family with no consent → appears as **unknown**, not as "no", and is not counted
-   by `fuerKlassenliste()`.
+   by `forClassList()`.
 10. Check in the browser: no `connect-src` in the CSP, and no outgoing request in the network
     panel after entering data.

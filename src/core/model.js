@@ -1,41 +1,55 @@
 // The delegate's dataset and the rules for growing it.
 //
 // Three entities, not four: the form no longer declares who lives with whom, so a
-// household is not stored. The address rides on the person, and the grouping key for every
-// output is the child.
+// household is not stored. The address rides on the caregiver, and the grouping key for
+// every output is the child.
 //
 // Normalisation happens here, on the way in. Nothing downstream — no list, no vCard, no
 // CSV — should ever have to wonder whether a value was cleaned. If raw input can reach a
 // renderer, one export path will eventually be clean and another will not.
+//
+// Field names are English because developers read them; the *values* stay German because
+// "Klasse 3a" and "Mutter" are real data. Anything a delegate reads on screen comes back
+// as a German `text` next to an English `code`.
 
 import { normalizeName } from './names.js';
 import { normalizeEmail } from './email.js';
 import { normalizePhone } from './phone.js';
 
-export const PROJEKT_VERSION = 1;
+export const PROJECT_VERSION = 1;
 
 /** Consent that was never recorded. Distinct from a recorded "no". */
-export const UNBEKANNT = null;
+export const UNKNOWN = null;
 
-export function neuesProjekt({ klasse, schuljahr, startSchuljahr, jetzt }) {
+export function newProject({ classLabel, schoolYear, startSchoolYear, now }) {
   return {
-    v: PROJEKT_VERSION,
-    klasse: klasse || '',
-    schuljahr: schuljahr || '',
-    startSchuljahr: startSchuljahr || schuljahr || '',
-    erstellt: jetzt || '',
-    zaehler: 0,
-    kinder: [],
-    personen: [],
-    protokoll: [],
+    v: PROJECT_VERSION,
+    classLabel: classLabel || '',
+    schoolYear: schoolYear || '',
+    startSchoolYear: startSchoolYear || schoolYear || '',
+    created: now || '',
+    counter: 0,
+    children: [],
+    caregivers: [],
+    log: [],
   };
 }
 
-const id = (projekt, praefix) => `${praefix}${++projekt.zaehler}`;
+const nextId = (project, prefix) => `${prefix}${++project.counter}`;
 
-const schluessel = (text) => String(text || '').trim().toLowerCase();
+const keyOf = (text) => String(text || '').trim().toLowerCase();
 
-const kindSchluessel = (k) => `${schluessel(k.vorname)}|${schluessel(k.nachname)}`;
+const childKey = (c) => `${keyOf(c.firstName)}|${keyOf(c.lastName)}`;
+
+/**
+ * Prefer a contact channel for identity: parents retype their own name inconsistently
+ * ("Sophie" one year, "Sophie Müller-Bühler" the next) but an address or number is stable.
+ */
+function caregiverKey(c) {
+  if (c.email) return `e:${keyOf(c.email)}`;
+  if (c.mobile) return `m:${keyOf(c.mobile)}`;
+  return `n:${keyOf(c.firstName)}|${keyOf(c.lastName)}`;
+}
 
 /**
  * Find the child a submission is about.
@@ -50,61 +64,67 @@ const kindSchluessel = (k) => `${schluessel(k.vorname)}|${schluessel(k.nachname)
  * otherwise creates a separate child and leaves the delegate to see two similar entries.
  * A visible duplicate is a much cheaper error than a silent mix-up.
  */
-function kindFinden(projekt, kind) {
-  const genau = projekt.kinder.find((k) => kindSchluessel(k) === kindSchluessel(kind));
-  if (genau) return genau;
+function findChild(project, child) {
+  const exact = project.children.find((c) => childKey(c) === childKey(child));
+  if (exact) return exact;
 
-  const gleicherVorname = projekt.kinder.filter((k) => schluessel(k.vorname) === schluessel(kind.vorname));
+  const sameFirstName = project.children.filter(
+    (c) => keyOf(c.firstName) === keyOf(child.firstName));
 
-  if (!kind.nachname) {
+  if (!child.lastName) {
     // No surname given: attach to the one child with this first name, if there is one.
-    return gleicherVorname.length === 1 ? gleicherVorname[0] : null;
+    return sameFirstName.length === 1 ? sameFirstName[0] : null;
   }
   // Surname given: fill it into the one nameless child with this first name, if there is one.
-  const ohneNachname = gleicherVorname.filter((k) => !k.nachname);
-  return ohneNachname.length === 1 ? ohneNachname[0] : null;
+  const nameless = sameFirstName.filter((c) => !c.lastName);
+  return nameless.length === 1 ? nameless[0] : null;
 }
 
-/**
- * Prefer a contact channel for identity: parents retype their own name inconsistently
- * ("Sophie" one year, "Sophie Müller-Bühler" the next) but an address or number is stable.
- */
-function personSchluessel(p) {
-  if (p.email) return `e:${schluessel(p.email)}`;
-  if (p.mobil) return `m:${schluessel(p.mobil)}`;
-  return `n:${schluessel(p.vorname)}|${schluessel(p.nachname)}`;
-}
+function normalizeCaregiver(raw) {
+  const email = raw.email ? normalizeEmail(raw.email) : null;
+  const phone = raw.mobile ? normalizePhone(raw.mobile) : null;
+  const notes = [];
+  if (raw.email && !email.ok) {
+    notes.push({ code: 'email-unreadable', text: `E-Mail nicht lesbar: ${raw.email}` });
+  }
+  if (email?.suggestion) {
+    notes.push({ code: 'email-typo',
+      text: `Tippfehler in der E-Mail? ${email.value} → ${email.suggestion}` });
+  }
+  if (raw.mobile && !phone.ok) {
+    notes.push({ code: 'mobile-unreadable', text: `Nummer nicht lesbar: ${raw.mobile}` });
+  }
 
-function personNormalisieren(rohe) {
-  const email = rohe.email ? normalizeEmail(rohe.email) : null;
-  const tel = rohe.mobil ? normalizePhone(rohe.mobil) : null;
-  const hinweise = [];
-  if (rohe.email && !email.ok) hinweise.push(`E-Mail unlesbar: ${rohe.email}`);
-  if (email?.suggestion) hinweise.push(`E-Mail-Tippfehler? ${email.value} → ${email.suggestion}`);
-  if (rohe.mobil && !tel.ok) hinweise.push(`Nummer unlesbar: ${rohe.mobil}`);
-
-  const adresse = rohe.adresse && (rohe.adresse.strasse || rohe.adresse.plz || rohe.adresse.ort)
+  const a = raw.address;
+  const address = a && (a.street || a.postcode || a.town)
     ? {
-        strasse: String(rohe.adresse.strasse || '').trim(),
-        plz: String(rohe.adresse.plz || '').trim(),
-        ort: normalizeName(rohe.adresse.ort || ''),
+        street: String(a.street || '').trim(),
+        postcode: String(a.postcode || '').trim(),
+        town: normalizeName(a.town || ''),
       }
     : null;
 
   return {
-    person: {
-      vorname: normalizeName(rohe.vorname || ''),
-      nachname: normalizeName(rohe.nachname || ''),
-      rolle: String(rohe.rolle || '').trim(),
+    caregiver: {
+      firstName: normalizeName(raw.firstName || ''),
+      lastName: normalizeName(raw.lastName || ''),
+      role: String(raw.role || '').trim(),
       email: email?.ok ? email.value : '',
-      mobil: tel?.ok ? tel.e164 : '',
-      mobilAnzeige: tel?.ok ? tel.display : '',
-      mobilArt: tel?.ok ? tel.type : '',
-      adresse,
+      mobile: phone?.ok ? phone.e164 : '',
+      mobileDisplay: phone?.ok ? phone.display : '',
+      mobileType: phone?.ok ? phone.type : '',
+      address,
     },
-    hinweise,
+    notes,
   };
 }
+
+/** German labels for the fields whose change is worth telling a delegate about. */
+const REPORTABLE = {
+  firstName: 'Vorname', lastName: 'Nachname', role: 'Rolle',
+  email: 'E-Mail', mobile: 'Mobilnummer',
+};
+const DERIVED = ['mobileDisplay', 'mobileType'];
 
 /**
  * Copy incoming values over stored ones — but never clear a stored value with an empty
@@ -115,138 +135,151 @@ function personNormalisieren(rohe) {
  * blank out what the other person supplied, and a form left partly empty must not erase
  * last month's answer.
  */
-function feldweiseUebernehmen(ziel, neu) {
-  const geaendert = [];
-  for (const feld of ['vorname', 'nachname', 'rolle', 'email', 'mobil', 'mobilAnzeige', 'mobilArt']) {
-    if (neu[feld] && neu[feld] !== ziel[feld]) {
-      if (ziel[feld]) geaendert.push(`${feld}: ${ziel[feld]} → ${neu[feld]}`);
-      ziel[feld] = neu[feld];
+function copyNonEmpty(target, incoming) {
+  const changes = [];
+  for (const field of Object.keys(REPORTABLE)) {
+    if (incoming[field] && incoming[field] !== target[field]) {
+      if (target[field]) {
+        changes.push(`${REPORTABLE[field]}: ${target[field]} → ${incoming[field]}`);
+      }
+      target[field] = incoming[field];
     }
   }
-  if (neu.adresse) {
-    ziel.adresse = ziel.adresse ? { ...ziel.adresse } : {};
-    for (const feld of ['strasse', 'plz', 'ort']) {
-      if (neu.adresse[feld]) ziel.adresse[feld] = neu.adresse[feld];
+  // Derived from the mobile number, so a change here is not news on its own.
+  for (const field of DERIVED) if (incoming[field]) target[field] = incoming[field];
+
+  if (incoming.address) {
+    target.address = target.address ? { ...target.address } : {};
+    for (const field of ['street', 'postcode', 'town']) {
+      if (incoming.address[field]) target.address[field] = incoming.address[field];
     }
   }
-  return geaendert;
+  return changes;
 }
 
-function einwilligungAus(s, jetzt) {
+const JA_NEIN = (v) => (v === UNKNOWN ? 'unbekannt' : v ? 'ja' : 'nein');
+
+function consentFrom(s, now) {
   // No consent block at all means nobody ever asked — an old list, a WhatsApp group, last
   // year's file. That is not a "no", and it must not be treated as one.
-  if (!s.einwilligung) {
-    return { liste: UNBEKANNT, whatsapp: UNBEKANNT, erfasst: '', quelle: 'altbestand', merkblatt: '' };
+  if (!s.consent) {
+    return {
+      classList: UNKNOWN, whatsappGroup: UNKNOWN,
+      recordedAt: '', source: 'legacy', noticeVersion: '',
+    };
   }
   return {
-    liste: !!s.einwilligung.liste,
-    whatsapp: !!s.einwilligung.whatsapp,
-    erfasst: s.datum || jetzt || '',
-    quelle: s.quelle || 'formular',
-    merkblatt: s.merkblatt || '',
+    classList: !!s.consent.classList,
+    whatsappGroup: !!s.consent.whatsappGroup,
+    recordedAt: s.date || now || '',
+    source: s.source || 'form',
+    noticeVersion: s.noticeVersion || '',
   };
 }
 
 /**
  * Take one submission into the project.
- * @returns {{ergebnis: 'neu'|'ergaenzt'|'unveraendert', kinder: string[], hinweise: string[], aenderungen: string[]}}
+ * @returns {{outcome: 'new'|'updated'|'unchanged', children: string[],
+ *            notes: {code: string, text: string}[], changes: string[]}}
+ *   `changes` are German sentences for the confirmation step, display only.
  */
-export function einreichungAufnehmen(projekt, s, opts = {}) {
-  const jetzt = opts.jetzt || '';
-  const hinweise = [];
-  const aenderungen = [];
-  let etwasNeu = false;
+export function ingestSubmission(project, s, opts = {}) {
+  const now = opts.now || '';
+  const notes = [];
+  const changes = [];
+  let somethingNew = false;
 
-  const kindIds = [];
-  for (const rohesKind of s.kinder || []) {
-    const kind = {
-      vorname: normalizeName(rohesKind.vorname || ''),
-      nachname: normalizeName(rohesKind.nachname || ''),
+  const childIds = [];
+  for (const rawChild of s.children || []) {
+    const child = {
+      firstName: normalizeName(rawChild.firstName || ''),
+      lastName: normalizeName(rawChild.lastName || ''),
     };
-    if (!kind.vorname && !kind.nachname) continue;
-    let vorhanden = kindFinden(projekt, kind);
-    if (!vorhanden) {
-      vorhanden = { id: id(projekt, 'k'), ...kind };
-      projekt.kinder.push(vorhanden);
-      etwasNeu = true;
-    } else if (kind.nachname && !vorhanden.nachname) {
-      vorhanden.nachname = kind.nachname;   // a later submission filled in the surname
-      aenderungen.push(`Nachname ergänzt: ${vorhanden.vorname} ${kind.nachname}`);
+    if (!child.firstName && !child.lastName) continue;
+    let existing = findChild(project, child);
+    if (!existing) {
+      existing = { id: nextId(project, 'k'), ...child };
+      project.children.push(existing);
+      somethingNew = true;
+    } else if (child.lastName && !existing.lastName) {
+      existing.lastName = child.lastName;   // a later submission filled in the surname
+      changes.push(`Nachname ergänzt: ${existing.firstName} ${child.lastName}`);
     }
-    kindIds.push(vorhanden.id);
+    childIds.push(existing.id);
   }
 
-  const einwilligung = einwilligungAus(s, jetzt);
+  const consent = consentFrom(s, now);
 
-  for (const rohePerson of s.personen || []) {
-    const { person, hinweise: h } = personNormalisieren(rohePerson);
-    hinweise.push(...h);
-    if (!person.vorname && !person.nachname && !person.email && !person.mobil) continue;
+  for (const rawCaregiver of s.caregivers || []) {
+    const { caregiver, notes: n } = normalizeCaregiver(rawCaregiver);
+    notes.push(...n);
+    if (!caregiver.firstName && !caregiver.lastName && !caregiver.email && !caregiver.mobile) {
+      continue;
+    }
 
-    const schl = personSchluessel(person);
-    let vorhanden = projekt.personen.find((p) => personSchluessel(p) === schl);
-    if (!vorhanden) {
-      vorhanden = { id: id(projekt, 'p'), ...person, kinder: [], einwilligung };
-      projekt.personen.push(vorhanden);
-      etwasNeu = true;
+    const key = caregiverKey(caregiver);
+    let existing = project.caregivers.find((c) => caregiverKey(c) === key);
+    if (!existing) {
+      existing = { id: nextId(project, 'p'), ...caregiver, children: [], consent };
+      project.caregivers.push(existing);
+      somethingNew = true;
     } else {
-      const diff = feldweiseUebernehmen(vorhanden, person);
-      aenderungen.push(...diff);
+      changes.push(...copyNonEmpty(existing, caregiver));
       // An explicit answer always wins, including over an earlier one: this is how a
       // withdrawal takes effect.
-      if (s.einwilligung) {
-        if (vorhanden.einwilligung.liste !== einwilligung.liste
-            || vorhanden.einwilligung.whatsapp !== einwilligung.whatsapp) {
-          aenderungen.push(
-            `Einwilligung: Liste ${vorhanden.einwilligung.liste} → ${einwilligung.liste}, ` +
-            `WhatsApp ${vorhanden.einwilligung.whatsapp} → ${einwilligung.whatsapp}`);
+      if (s.consent) {
+        if (existing.consent.classList !== consent.classList) {
+          changes.push(`Klassenliste: ${JA_NEIN(existing.consent.classList)} → ${JA_NEIN(consent.classList)}`);
         }
-        vorhanden.einwilligung = einwilligung;
+        if (existing.consent.whatsappGroup !== consent.whatsappGroup) {
+          changes.push(`WhatsApp-Gruppe: ${JA_NEIN(existing.consent.whatsappGroup)} → ${JA_NEIN(consent.whatsappGroup)}`);
+        }
+        existing.consent = consent;
       }
     }
-    for (const kid of kindIds) if (!vorhanden.kinder.includes(kid)) vorhanden.kinder.push(kid);
+    for (const id of childIds) if (!existing.children.includes(id)) existing.children.push(id);
   }
 
-  const ergebnis = etwasNeu ? 'neu' : (aenderungen.length ? 'ergaenzt' : 'unveraendert');
-  projekt.protokoll.push({
-    zeit: jetzt,
-    art: 'einreichung',
-    text: `${ergebnis}: ${(s.kinder || []).map((k) => k.vorname).join(', ') || 'ohne Kind'}`,
+  const outcome = somethingNew ? 'new' : (changes.length ? 'updated' : 'unchanged');
+  project.log.push({
+    at: now,
+    kind: 'submission',
+    text: `${outcome}: ${(s.children || []).map((c) => c.firstName).join(', ') || 'ohne Kind'}`,
   });
-  return { ergebnis, kinder: kindIds, hinweise, aenderungen };
+  return { outcome, children: childIds, notes, changes };
 }
 
 // ---------------------------------------------------------------- queries
 
-export const personenFuerKind = (projekt, kindId) =>
-  projekt.personen.filter((p) => p.kinder.includes(kindId));
+export const caregiversForChild = (project, childId) =>
+  project.caregivers.filter((c) => c.children.includes(childId));
 
 /** Only people who said yes belong in anything shared with other parents. */
-export const fuerKlassenliste = (projekt) =>
-  projekt.personen.filter((p) => p.einwilligung.liste === true);
+export const forClassList = (project) =>
+  project.caregivers.filter((c) => c.consent.classList === true);
 
-export const fuerWhatsapp = (projekt) =>
-  projekt.personen.filter((p) => p.einwilligung.whatsapp === true && p.mobil);
+export const forWhatsappGroup = (project) =>
+  project.caregivers.filter((c) => c.consent.whatsappGroup === true && c.mobile);
 
 /** People whose consent was never recorded. They stay out of shared output until asked. */
-export const einwilligungOffen = (projekt) =>
-  projekt.personen.filter((p) => p.einwilligung.liste === UNBEKANNT);
+export const consentUnrecorded = (project) =>
+  project.caregivers.filter((c) => c.consent.classList === UNKNOWN);
 
 /**
  * Roster reconciliation: which children on the class list have nobody attached yet.
  * @param {string[]} roster names as written on the class list
  */
-export function fehlendeKinder(projekt, roster) {
-  const vorhanden = new Set(projekt.kinder
-    .filter((k) => personenFuerKind(projekt, k.id).length > 0)
-    .map((k) => kindSchluessel(k)));
+export function missingChildren(project, roster) {
+  const covered = new Set(project.children
+    .filter((c) => caregiversForChild(project, c.id).length > 0)
+    .map((c) => childKey(c)));
   return (roster || []).filter((name) => {
-    const teile = String(name).trim().split(/\s+/);
-    const kind = { vorname: teile[0] || '', nachname: teile.slice(1).join(' ') };
-    if (vorhanden.has(kindSchluessel(kind))) return false;
+    const parts = String(name).trim().split(/\s+/);
+    const child = { firstName: parts[0] || '', lastName: parts.slice(1).join(' ') };
+    if (covered.has(childKey(child))) return false;
     // A roster entry with only a first name still matches a child recorded with a surname.
-    if (!kind.nachname) {
-      return ![...vorhanden].some((s) => s.startsWith(`${schluessel(kind.vorname)}|`));
+    if (!child.lastName) {
+      return ![...covered].some((k) => k.startsWith(`${keyOf(child.firstName)}|`));
     }
     return true;
   });
@@ -254,26 +287,31 @@ export function fehlendeKinder(projekt, roster) {
 
 // ---------------------------------------------------------------- persistence
 
-export const projektNachJson = (projekt) => JSON.stringify(projekt, null, 1);
+export const projectToJson = (project) => JSON.stringify(project, null, 1);
 
-export function projektAusJson(text) {
+/** @returns {{ok: true, project: object} | {ok: false, code: string, text: string}} */
+export function projectFromJson(text) {
+  const fail = (code, message) => ({ ok: false, code, text: message });
   let p;
-  try { p = JSON.parse(text); } catch { return { ok: false, reason: 'keine gültige Datei' }; }
-  if (!p || typeof p !== 'object') return { ok: false, reason: 'keine gültige Datei' };
-  if (p.v !== PROJEKT_VERSION) return { ok: false, reason: `unbekannte Dateiversion ${p.v}` };
-  for (const feld of ['kinder', 'personen', 'protokoll']) {
-    if (!Array.isArray(p[feld])) return { ok: false, reason: `Feld ${feld} fehlt` };
+  try { p = JSON.parse(text); } catch { return fail('invalid-file', 'Keine gültige Datei.'); }
+  if (!p || typeof p !== 'object') return fail('invalid-file', 'Keine gültige Datei.');
+  if (p.v !== PROJECT_VERSION) {
+    return fail('version-mismatch', `Unbekannte Dateiversion ${p.v}.`);
   }
-  return { ok: true, projekt: p };
+  for (const field of ['children', 'caregivers', 'log']) {
+    if (!Array.isArray(p[field])) return fail('missing-field', `Im Feld ${field} fehlen Angaben.`);
+  }
+  return { ok: true, project: p };
 }
 
-export function personLoeschen(projekt, personId, jetzt = '') {
-  const i = projekt.personen.findIndex((p) => p.id === personId);
+export function deleteCaregiver(project, caregiverId, now = '') {
+  const i = project.caregivers.findIndex((c) => c.id === caregiverId);
   if (i === -1) return false;
-  const [weg] = projekt.personen.splice(i, 1);
-  projekt.protokoll.push({ zeit: jetzt, art: 'loeschung', text: `${weg.vorname} ${weg.nachname}` });
+  const [gone] = project.caregivers.splice(i, 1);
+  project.log.push({ at: now, kind: 'deletion', text: `${gone.firstName} ${gone.lastName}` });
   // Children nobody is attached to any more go too: keeping them would leave a name in the
   // file with no purpose, and the point of the year-end routine is that nothing lingers.
-  projekt.kinder = projekt.kinder.filter((k) => personenFuerKind(projekt, k.id).length > 0);
+  project.children = project.children.filter(
+    (c) => caregiversForChild(project, c.id).length > 0);
   return true;
 }
