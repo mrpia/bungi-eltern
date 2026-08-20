@@ -3,6 +3,10 @@
 Goal: this file should be enough to build `/w/` in a fresh session without knowing how the
 project got here. Where a decision looks open, it has been made here.
 
+**Status: built on 2026-08-20**, all ten acceptance checks below walked in a browser. The
+sections marked *learned while building* record what this document got wrong or left out;
+they are the newer decision where the two disagree.
+
 Language: see [`CLAUDE.md`](../CLAUDE.md). Identifiers, ids, CSS classes and codes in
 English; everything a delegate reads on screen in German.
 
@@ -36,10 +40,21 @@ default-src 'none'; script-src 'self'; style-src 'self';
 img-src 'self' data: blob:; form-action 'none'; base-uri 'none'
 ```
 
-`blob:` on `img-src` is needed because the outputs will later offer downloads via
-`URL.createObjectURL`. **No `connect-src`** — the page cannot send the class's data
-anywhere, and that is verifiable in one line. Anyone who later loads a library or an icon
-from a CDN has broken the only load-bearing promise this tool makes.
+`blob:` on `img-src` is there for the outputs still to come, which will render QR codes and
+previews through `URL.createObjectURL`. *Learned while building:* the original reason given
+here — downloads — was wrong. A download through `<a download>` with a blob URL is not an
+image fetch and is governed by none of these directives; it was tested under exactly this
+policy and works. The directive stays for the previews.
+
+**No `connect-src`** — the page cannot send the class's data anywhere, and that is
+verifiable in one line. Anyone who later loads a library or an icon from a CDN has broken
+the only load-bearing promise this tool makes.
+
+*Learned while building:* `fetch` and `XMLHttpRequest` are refused with a console error, as
+expected. **`navigator.sendBeacon` returns `true` anyway** — Chromium queues the beacon
+before applying CSP and then drops it. Nothing reaches the wire (checked against the server
+log: every request a GET, no beacon), but the return value is a false reassurance, so do not
+use it as the check. Read the console, or the server log.
 
 ## Data flow when taking a submission in
 
@@ -67,6 +82,35 @@ Parents send a message containing a readable block and, below it, a link of the 
 6. Always show `notes` from the result — each is `{code, text}`, covering unreadable
    numbers and suspected typos. Never correct them automatically.
 
+### Trap: a load handler alone catches only half the arrivals
+
+*Learned while building, and it cost an acceptance check.* Steps 1 and 2 above describe
+what happens **on load**. Tapping `/w/#d=…` while the workbench is already open in that tab
+is a *same-document* navigation: the browser changes the fragment, fires `hashchange`, and
+**does not re-run the module**. With only the load path implemented, the page sat there
+doing nothing while the payload stayed in the address bar — and a delegate with the tool
+open in a tab is the ordinary case, not the edge case.
+
+So the reading and the scrubbing belong in one function called from **both** places:
+
+```js
+function takeHash() {
+  const found = submissionFromHash(location.hash);
+  if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+  return found;
+}
+const arriving = takeHash();
+window.addEventListener('hashchange', () => { const f = takeHash(); if (f) handleArriving(f); });
+```
+
+`replaceState` does not fire `hashchange`, so this cannot loop.
+
+### Trap: a percent sign in the payload
+
+base64url needs no escaping, so a `%` in the fragment can only have been added on the way
+through — some mail clients re-encode fragments. Try `decodeURIComponent` before reporting a
+broken link the delegate can see is intact.
+
 ### Class does not match
 
 If the submission names a different class than the open project, do **not** take it in
@@ -81,12 +125,23 @@ Source of truth in daily use is IndexedDB. The project file is backup and migrat
 ```
 Database:  klassenkontakte          // the product name, a proper noun
 Version:   1
-Store:     projects, keyPath 'slug'      // '3a', 'kiga1', ...
-Record:    { slug, project, savedAt }    // project = the object from model.js
+Store:     projects, keyPath 'slug'                  // '3a', 'kiga1', ...
+Record:    { slug, project, savedAt, openedAt }      // project = the object from model.js
 ```
 
+*Learned while building:* `openedAt` is the addition. Something has to remember which class
+to reopen, and the obvious answer — a second store, or a localStorage key holding the
+current slug — leaves a pointer that "delete everything" turns into a dangling reference.
+Stamping the record itself and reopening the most recently stamped one needs no second
+place to keep consistent, and it happens to give a delegate with two classes the one they
+were last in.
+
 - Autosave after **every** change, debounced by 500 ms. Delegates must not lose work because
-  they forgot to save.
+  they forgot to save. Flush on `visibilitychange` too: that is the hook that actually fires
+  when a phone browser is put away, and `beforeunload` frequently does not.
+- **Cancel the pending save before deleting.** A debounced flush that fires after
+  `removeRecord` writes the project straight back in, and the delegate who just typed a
+  class name to confirm the deletion is the last person who would check.
 - Visible state in the page header: "Saved 14:32" or "Not saved".
 - Project file: `projectToJson()`, downloaded as
   `klassenkontakte-<slug>-<YYYY-MM-DD>.json`.
@@ -126,9 +181,25 @@ Counters at the top: "14 of 22 families · 11 on the class list · 3 without con
 **Typing in a paper form.** The same form as `/f/`, but stored locally instead of sent.
 Reachable via "add a family by hand". Keyboard-friendly: tab between fields, Enter saves and
 opens a fresh empty form, because a delegate at the kitchen table types twenty slips in a row.
+Enter needs no key handling: a form submit is what Enter in a text field already does, and
+`form-action 'none'` means a missed `preventDefault` cannot become a request.
+
+*Learned while building — one deliberate departure from "the same form as `/f/`".* The two
+consent checkboxes are **three radio buttons each**: ja, nein, and *nicht angekreuzt*,
+defaulting to the last. On the parent form an unticked box means the parent read the
+question and declined. On a paper slip it far more often means they skipped it, and
+recording that as a refusal is precisely the mistake the whole third state exists to
+prevent. This needed a two-line change in `consentFrom()`: a consent field that is absent
+or `UNKNOWN` now stays unknown per field, instead of the block being all-or-nothing.
 
 **Changing consent.** Toggleable directly in the list, with the date of the change recorded
 in the log. A withdrawal by phone must be recordable in ten seconds.
+
+Implemented as one tappable pill per question, cycling **unbekannt → ja → nein → unbekannt**.
+No cycle order makes both common moves a single tap; this one favours the withdrawal, since
+"she phoned to say take me off" starts from a recorded yes. The pill is replaced in place
+rather than the list redrawn, so a second tap lands on the same spot. `setConsent()` in
+`model.js` does the mutation and writes the log line.
 
 **Deleting.** A single person (`deleteCaregiver()`, which also clears orphaned children) and
 "delete everything", confirmed by typing the class name.
@@ -148,6 +219,20 @@ All from `src/core/`. Do not rebuild any of it, and **do not normalise again**:
 | `missingChildren` | model.js | chase list (needs the class roster as input) |
 | `projectToJson`, `projectFromJson`, `deleteCaregiver` | model.js | file and deletion |
 | `parseClassName`, `compareClasses` | classname.js | class picker, sorting |
+| `setConsent` | model.js | a withdrawal recorded by phone (added while building) |
+
+`missingChildren()` is listed above but unused in v1: it needs the class roster as input,
+and nothing types a roster in yet. It belongs with the chase list, which is one of the six
+outputs.
+
+Three modules were added under `src/w/`, all free of the DOM so they can be unit-tested in
+node — `intake.js` (hash → decision), `format.js` (the German a delegate reads), and
+`storage.js` (IndexedDB). `workbench.js` is the only file that touches the page.
+
+The confirmation step in step 4 above is `previewIngest()`: `structuredClone` the project,
+run the **real** `ingestSubmission` against the copy, and diff the ids to name what would be
+added. The tempting alternative — a second function that predicts the merge — drifts from
+the real one within a month and then lies at the exact moment a delegate is trusting it.
 
 ## Acceptance checks
 

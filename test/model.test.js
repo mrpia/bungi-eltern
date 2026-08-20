@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   newProject, ingestSubmission, caregiversForChild, forClassList, forWhatsappGroup,
-  consentUnrecorded, missingChildren, projectToJson, projectFromJson, deleteCaregiver,
+  consentUnrecorded, missingChildren, projectToJson, projectFromJson, deleteCaregiver, setConsent,
   UNKNOWN, PROJECT_VERSION,
 } from '../src/core/model.js';
 
@@ -242,4 +242,95 @@ test('model: a typo suggestion is a note, not a rewrite', () => {
   assert.equal(r.notes[0].code, 'email-typo');
   assert.match(r.notes[0].text, /bluewin\.ch/);
   assert.equal(p.caregivers[0].email, 'sophie@bluewin.cj', 'stored as given, never rewritten');
+});
+
+test('model: a consent field left out is unknown, not a no', () => {
+  // A paper slip where the parent ticked the class list and ignored the WhatsApp box. The
+  // ignored one is a question still to ask, and recording it as a refusal would hide that.
+  const p = project();
+  ingest(p, submission({ consent: { classList: true }, source: 'paper' }));
+  const c = p.caregivers[0];
+  assert.equal(c.consent.classList, true);
+  assert.equal(c.consent.whatsappGroup, UNKNOWN);
+  assert.equal(c.consent.source, 'paper');
+  assert.equal(consentUnrecorded(p).length, 0, 'the class list was answered');
+  assert.equal(forWhatsappGroup(p).length, 0, 'the group was not');
+});
+
+test('model: a whole slip with nothing ticked leaves both questions open', () => {
+  const p = project();
+  ingest(p, submission({ consent: { classList: null, whatsappGroup: null }, source: 'paper' }));
+  assert.equal(forClassList(p).length, 0);
+  assert.equal(consentUnrecorded(p).length, 1);
+  assert.equal(p.caregivers[0].consent.source, 'paper',
+    'still a paper slip, not a legacy list');
+});
+
+test('model: setConsent records a withdrawal and says so in the log', () => {
+  const p = project();
+  ingest(p, submission());
+  const id = p.caregivers[0].id;
+  assert.equal(forClassList(p).length, 1);
+
+  assert.equal(setConsent(p, id, 'classList', false, '2026-10-01'), true);
+  assert.equal(forClassList(p).length, 0);
+  assert.equal(p.caregivers[0].consent.classList, false);
+  assert.equal(p.caregivers[0].consent.source, 'delegate');
+  assert.equal(p.caregivers[0].consent.recordedAt, '2026-10-01');
+
+  const entry = p.log.at(-1);
+  assert.equal(entry.kind, 'consent');
+  assert.equal(entry.at, '2026-10-01');
+  assert.equal(entry.text, 'Klassenliste: ja → nein (Sophie Müller)');
+});
+
+test('model: setConsent can put a question back to unanswered', () => {
+  const p = project();
+  ingest(p, submission());
+  setConsent(p, p.caregivers[0].id, 'whatsappGroup', UNKNOWN, '2026-10-01');
+  assert.equal(p.caregivers[0].consent.whatsappGroup, UNKNOWN);
+  assert.equal(consentUnrecorded(p).length, 0, 'the class list is still answered');
+  assert.equal(p.log.at(-1).text, 'WhatsApp-Gruppe: ja → unbekannt (Sophie Müller)');
+});
+
+test('model: setConsent reports doing nothing rather than logging noise', () => {
+  const p = project();
+  ingest(p, submission());
+  const logged = p.log.length;
+  assert.equal(setConsent(p, p.caregivers[0].id, 'classList', true, '2026-10-01'), false);
+  assert.equal(setConsent(p, 'p999', 'classList', false, '2026-10-01'), false);
+  assert.equal(setConsent(p, p.caregivers[0].id, 'somethingElse', false, '2026-10-01'), false);
+  assert.equal(p.log.length, logged);
+});
+
+test('model: delegate names survive the file round trip', () => {
+  const p = newProject({
+    classLabel: 'Klasse 3a', schoolYear: '2026/27', delegates: 'Sophie Müller, Marc Weber',
+    now: NOW,
+  });
+  const back = projectFromJson(projectToJson(p));
+  assert.equal(back.ok, true);
+  assert.equal(back.project.delegates, 'Sophie Müller, Marc Weber');
+  assert.equal(newProject({ classLabel: 'Klasse 3a' }).delegates, '');
+});
+
+test('model: a changed number is reported the way it is written down', () => {
+  const p = project();
+  ingest(p, submission());
+  const r = ingest(p, submission({
+    caregivers: [{ firstName: 'Sophie', lastName: 'Müller', email: 'sophie@bluewin.ch',
+                   mobile: '079 000 00 00' }],
+  }));
+  // Not "+41791234567 → +41790000000": nobody spots the difference between two runs of digits.
+  assert.deepEqual(r.changes, ['Mobilnummer: +41 79 123 45 67 → +41 79 000 00 00']);
+  assert.equal(p.caregivers[0].mobile, '+41790000000', 'stored in E.164 all the same');
+  assert.equal(p.caregivers[0].mobileDisplay, '+41 79 000 00 00');
+});
+
+test('model: the log records the tidied name, not what the parent typed', () => {
+  const p = project();
+  ingest(p, submission({ children: [{ firstName: 'léa', lastName: 'MÜLLER' }] }));
+  assert.equal(p.log.at(-1).text, 'new: Léa');
+  ingest(p, submission({ children: [] }));
+  assert.equal(p.log.at(-1).text, 'unchanged: ohne Kind');
 });

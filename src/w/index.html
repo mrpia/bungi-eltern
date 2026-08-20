@@ -1,0 +1,286 @@
+<!--
+  The workbench: the delegates' own tool. One page, not one per class — the class comes
+  from the project a delegate opened, not from the URL.
+
+  The Content-Security-Policy is the load-bearing part, not decoration. With no connect-src
+  the browser will not run a fetch, an XHR, a WebSocket or a sendBeacon from this page: it
+  *cannot* send a class's contact details anywhere, however it were edited. That is why the
+  script and the stylesheet are separate files and every value arrives in a <meta> tag —
+  script-src 'self' with no 'unsafe-inline' is a promise you can check in one line.
+
+  blob: on img-src is for the outputs still to come, which render QR codes and previews
+  through URL.createObjectURL. Downloads do not need it; a download is not an image.
+
+  Everything below is German because delegates read it. Ids, classes and data attributes
+  are English because developers do.
+-->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; form-action 'none'; base-uri 'none'">
+<link rel="icon" href="/favicon.svg">
+<link rel="stylesheet" href="/assets/w/workbench.css">
+<title>Werkstatt</title>
+
+<meta name="kk-year" content="2026/27">
+<meta name="kk-school" content="Schule Bungertwies">
+<meta name="kk-notice" content="2026-08-1">
+<meta name="kk-base" content="https://bungi-eltern.mrpia.ch">
+<meta name="kk-classes" content="Klasse 3a:22">
+
+<body>
+
+<header class="head hidden" id="head">
+  <div class="head-class">
+    <strong id="head-class"></strong>
+    <span id="head-year"></span>
+  </div>
+  <div class="head-state">
+    <span id="save-state" class="state"></span>
+    <button type="button" class="chip" id="head-switch">Klasse wechseln</button>
+  </div>
+</header>
+
+<p class="origin hidden" id="origin"></p>
+<div class="message hidden" id="message" role="status"></div>
+
+<!-- ------------------------------------------------ first run, and the class switcher -->
+<section class="screen hidden" id="screen-setup">
+  <h1>Werkstatt</h1>
+  <p class="intro">Das Werkzeug der Klassendelegierten: Angaben der Eltern übernehmen,
+  Klassenliste und Kontaktkarten daraus erzeugen.</p>
+  <div class="box">
+    <strong>Die Angaben bleiben auf diesem Gerät.</strong>
+    <p>Diese Seite hat keinen Server und keine Datenbank irgendwo sonst. Sie kann die
+    Angaben Ihrer Klasse technisch nicht verschicken. Was Sie hier erfassen, liegt in
+    diesem Browser — und in der Projektdatei, die Sie selber herunterladen.</p>
+  </div>
+
+  <div class="hidden" id="projects">
+    <h2>Bereits angelegt</h2>
+    <div id="projects-list"></div>
+  </div>
+
+  <h2 id="setup-title">Klasse anlegen</h2>
+  <label>
+    <span class="field-label">Klasse</span>
+    <select id="setup-class"></select>
+  </label>
+  <label>
+    <span class="field-label">Delegierte (freiwillig, erscheint später auf der Klassenliste)</span>
+    <input type="text" id="setup-delegates" autocomplete="off">
+  </label>
+  <button type="button" class="button" id="setup-create">Projekt anlegen</button>
+
+  <h2>Oder eine Projektdatei laden</h2>
+  <p class="hint">Die Datei, die Sie hier oder auf einem anderen Gerät heruntergeladen haben.</p>
+  <input type="file" id="setup-file" accept=".json,application/json">
+</section>
+
+<!-- ------------------------------------------------------------- taking a submission in -->
+<section class="screen hidden" id="screen-intake">
+  <h1 id="intake-title">Angaben übernehmen?</h1>
+
+  <div class="message warn hidden" id="intake-error"></div>
+
+  <div class="review hidden" id="intake-review"><pre id="intake-readable"></pre></div>
+
+  <div class="box hidden" id="intake-outcome">
+    <strong id="intake-outcome-text"></strong>
+    <ul class="changes hidden" id="intake-changes"></ul>
+  </div>
+
+  <div class="box notes hidden" id="intake-notes-box">
+    <strong>Bitte anschauen</strong>
+    <ul id="intake-notes"></ul>
+  </div>
+
+  <button type="button" class="button hidden" id="intake-accept">Übernehmen</button>
+  <button type="button" class="button hidden" id="intake-switch">Zur anderen Klasse wechseln und übernehmen</button>
+  <button type="button" class="button hidden" id="intake-create">Klasse anlegen und übernehmen</button>
+  <button type="button" class="button secondary hidden" id="intake-manual">Von Hand eintippen</button>
+  <button type="button" class="button secondary" id="intake-discard">Verwerfen</button>
+</section>
+
+<!-- ------------------------------------------------------------------------- the dataset -->
+<section class="screen hidden" id="screen-main">
+  <div class="counters" id="counters"></div>
+
+  <nav class="toolbar">
+    <button type="button" class="button" id="add-by-hand">Familie von Hand erfassen</button>
+    <button type="button" class="button secondary" id="download-file">Projektdatei herunterladen</button>
+    <button type="button" class="button secondary" id="upload-file">Projektdatei laden</button>
+    <button type="button" class="button danger" id="wipe">Alles löschen</button>
+  </nav>
+  <input type="file" id="main-file" accept=".json,application/json" class="offscreen">
+
+  <div id="families"></div>
+</section>
+
+<!-- ---------------------------------------------------------------- typing in a paper form -->
+<section class="screen hidden" id="screen-manual">
+  <h1>Familie von Hand erfassen</h1>
+  <p class="intro">Vom Papierzettel abtippen. <strong>Enter</strong> speichert und öffnet
+  ein leeres Formular für den nächsten Zettel.</p>
+
+  <div class="message ok hidden" id="manual-done" role="status"></div>
+  <div class="message warn hidden" id="manual-error" role="alert"></div>
+
+  <form id="manual-form" novalidate>
+    <fieldset>
+      <legend>Kind</legend>
+      <div class="pair">
+        <label>
+          <span class="field-label">Vorname <span class="required">*</span></span>
+          <input type="text" id="manual-child-first-name" autocomplete="off" enterkeyhint="next">
+        </label>
+        <label>
+          <span class="field-label">Nachname</span>
+          <input type="text" id="manual-child-last-name" autocomplete="off">
+        </label>
+      </div>
+    </fieldset>
+
+    <fieldset data-caregiver="1">
+      <legend>Bezugsperson</legend>
+      <p class="legend-note">E-Mail oder Mobilnummer — eines von beiden genügt.</p>
+      <div class="pair">
+        <label>
+          <span class="field-label">Vorname <span class="required">*</span></span>
+          <input type="text" data-role="firstName" autocomplete="off">
+        </label>
+        <label>
+          <span class="field-label">Nachname</span>
+          <input type="text" data-role="lastName" autocomplete="off">
+        </label>
+      </div>
+      <label>
+        <span class="field-label">Rolle</span>
+        <select data-role="role">
+          <option value="Mutter">Mutter</option>
+          <option value="Vater">Vater</option>
+          <option value="andere Bezugsperson">andere Bezugsperson</option>
+        </select>
+      </label>
+      <div class="pair">
+        <label>
+          <span class="field-label">E-Mail</span>
+          <input type="email" data-role="email" inputmode="email" spellcheck="false" autocapitalize="off">
+        </label>
+        <label>
+          <span class="field-label">Mobilnummer</span>
+          <input type="tel" data-role="mobile" inputmode="tel">
+        </label>
+      </div>
+      <button type="button" class="more" data-address-toggle>+ Adresse angeben</button>
+      <div data-address class="hidden">
+        <label>
+          <span class="field-label">Strasse und Nummer</span>
+          <input type="text" data-role="street" autocomplete="off">
+        </label>
+        <div class="pair">
+          <label class="narrow">
+            <span class="field-label">PLZ</span>
+            <input type="text" data-role="postcode" inputmode="numeric" autocomplete="off">
+          </label>
+          <label>
+            <span class="field-label">Ort</span>
+            <input type="text" data-role="town" autocomplete="off">
+          </label>
+        </div>
+      </div>
+    </fieldset>
+
+    <button type="button" class="more" id="manual-second-toggle">+ Zweite Person hinzufügen</button>
+
+    <fieldset data-caregiver="2" id="manual-second" class="hidden">
+      <legend>Zweite Person</legend>
+      <div class="pair">
+        <label>
+          <span class="field-label">Vorname</span>
+          <input type="text" data-role="firstName" autocomplete="off">
+        </label>
+        <label>
+          <span class="field-label">Nachname</span>
+          <input type="text" data-role="lastName" autocomplete="off">
+        </label>
+      </div>
+      <label>
+        <span class="field-label">Rolle</span>
+        <select data-role="role">
+          <option value="Vater">Vater</option>
+          <option value="Mutter">Mutter</option>
+          <option value="andere Bezugsperson">andere Bezugsperson</option>
+        </select>
+      </label>
+      <div class="pair">
+        <label>
+          <span class="field-label">E-Mail</span>
+          <input type="email" data-role="email" inputmode="email" spellcheck="false" autocapitalize="off">
+        </label>
+        <label>
+          <span class="field-label">Mobilnummer</span>
+          <input type="tel" data-role="mobile" inputmode="tel">
+        </label>
+      </div>
+      <button type="button" class="more" data-address-toggle>+ Adresse angeben</button>
+      <div data-address class="hidden">
+        <label>
+          <span class="field-label">Strasse und Nummer</span>
+          <input type="text" data-role="street" autocomplete="off">
+        </label>
+        <div class="pair">
+          <label class="narrow">
+            <span class="field-label">PLZ</span>
+            <input type="text" data-role="postcode" inputmode="numeric" autocomplete="off">
+          </label>
+          <label>
+            <span class="field-label">Ort</span>
+            <input type="text" data-role="town" autocomplete="off">
+          </label>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Einverständnis</legend>
+      <p class="legend-note">Was auf dem Zettel nicht angekreuzt ist, bleibt
+      <strong>unbekannt</strong>. Das ist kein Nein: diese Familie wurde noch nicht
+      gefragt und erscheint in keiner Liste, bis sie antwortet.</p>
+      <div class="tri">
+        <span class="field-label">Klassenliste</span>
+        <label><input type="radio" name="consent-class-list" value="unknown" checked> nicht angekreuzt</label>
+        <label><input type="radio" name="consent-class-list" value="yes"> ja</label>
+        <label><input type="radio" name="consent-class-list" value="no"> nein</label>
+      </div>
+      <div class="tri">
+        <span class="field-label">WhatsApp-Gruppe</span>
+        <label><input type="radio" name="consent-whatsapp-group" value="unknown" checked> nicht angekreuzt</label>
+        <label><input type="radio" name="consent-whatsapp-group" value="yes"> ja</label>
+        <label><input type="radio" name="consent-whatsapp-group" value="no"> nein</label>
+      </div>
+    </fieldset>
+
+    <button type="submit" class="button">Speichern und nächster Zettel</button>
+    <button type="button" class="button secondary" id="manual-back">Zurück zur Liste</button>
+  </form>
+</section>
+
+<!-- ------------------------------------------------------------------ one confirmation UI -->
+<section class="screen hidden" id="screen-confirm">
+  <h1 id="confirm-title"></h1>
+  <div class="box pre" id="confirm-body"></div>
+  <label class="hidden" id="confirm-typed">
+    <span class="field-label" id="confirm-typed-label"></span>
+    <input type="text" id="confirm-typed-input" autocomplete="off" autocapitalize="off">
+  </label>
+  <button type="button" class="button" id="confirm-yes"></button>
+  <button type="button" class="button secondary" id="confirm-no">Abbrechen</button>
+</section>
+
+<p class="footer">Elternrat <span id="foot-school"></span> ·
+  <a href="/merkblatt/">Merkblatt</a></p>
+
+<script type="module" src="/assets/w/workbench.js"></script>
+</body>

@@ -8,7 +8,7 @@
 // No dependencies, no bundler, no minifier. Copy and rewrite, that is all.
 
 import { readFile, writeFile, mkdir, rm, readdir, copyFile } from 'node:fs/promises';
-import { join, dirname } from 'node:path';
+import { join, dirname, basename } from 'node:path';
 import { createHash } from 'node:crypto';
 import { parseClassName, compareClasses } from '../src/core/classname.js';
 
@@ -49,10 +49,93 @@ function fillDefaults(text, values) {
  */
 const hash = (text) => createHash('sha256').update(text).digest('hex').slice(0, 8);
 
-/** Relative module imports become absolute, so nesting depth stops mattering. */
-const absolutise = (text) =>
-  text.replace(/(['"])\.\.\/core\//g, '$1/assets/core/')
-      .replace(/(['"])\.\.\/vendor\//g, '$1/assets/vendor/');
+/**
+ * Set a `<meta name="kk-*">` value in a page template. Fails when the name is absent.
+ *
+ * This used to hand whole tags to String.replace, which returns its input unchanged when
+ * the needle is not found. Once the meta names were translated from German to English the
+ * calls stopped matching, and twelve of the thirteen parent forms went on announcing
+ * "Klasse 3a" — with a green build and a passing test suite. A silent no-op is the wrong
+ * primitive for a build invariant.
+ */
+function setMeta(text, name, value) {
+  const tag = new RegExp(`(<meta name="kk-${name}" content=")[^"]*(">)`);
+  if (!tag.test(text)) throw new Error(`no <meta name="kk-${name}"> in the template to fill`);
+  const safe = String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return text.replace(tag, (whole, open, close) => `${open}${safe}${close}`);
+}
+
+// ---------------------------------------------------------------- assets
+
+// A module specifier in an import statement, in any of its three spellings:
+// `from './x'`, `import './x'`, `import('./x')`.
+const IMPORT = /\b(from|import)(\s*\(?\s*)(['"])([^'"]+)\3/g;
+
+/**
+ * Relative module specifiers become absolute /assets/ URLs, so nesting depth stops
+ * mattering: pages live at /f/3a/, /kit/ and /w/ and all import the same core modules.
+ *
+ * @param {string|null} dir output directory under /assets/, for sibling `./x.js` imports.
+ *   Null for HTML pages, which do not sit in /assets/ and where `./` means something else.
+ */
+const absolutise = (text, dir = null) => text.replace(IMPORT, (whole, keyword, gap, quote, spec) => {
+  const rewritten = spec.startsWith('../') ? `/assets/${spec.slice(3)}`
+    : dir && spec.startsWith('./') ? `/assets/${dir}/${spec.slice(2)}`
+    : null;
+  return rewritten ? `${keyword}${gap}${quote}${rewritten}${quote}` : whole;
+});
+
+const assets = new Map();     // URL → source, its own imports already absolutised
+const hashes = new Map();     // URL → content hash
+const emitted = new Map();    // URL → text as written, imports carrying their hashes
+
+/** Read a source directory into the asset registry; anything not code is copied verbatim. */
+async function stage(fromRel, toRel) {
+  for (const file of await readdir(join(SRC, fromRel))) {
+    if (file.startsWith('_')) continue;                   // dev-only helpers stay out
+    const body = await readFile(join(SRC, fromRel, file), 'utf8');
+    if (/\.(m?js|css)$/.test(file)) {
+      assets.set(`/${toRel}/${file}`, absolutise(body, basename(toRel)));
+    } else {
+      await write(join(toRel, file), body);
+    }
+  }
+}
+
+/**
+ * Hash an asset, bottom-up: its hash covers the hashed URLs of everything it imports.
+ *
+ * Without this the hash only reached one level. `/assets/f/form.js` carried a hash, but the
+ * `/assets/core/payload.js` it imports did not, so a browser holding yesterday's payload
+ * module would pair it with today's form and the wire format would disagree with itself.
+ * Now a change to any core module changes the URL of every page asset above it.
+ */
+function hashOf(url, chain = []) {
+  if (hashes.has(url)) return hashes.get(url);
+  if (chain.includes(url)) throw new Error(`import cycle: ${[...chain, url].join(' → ')}`);
+  const body = assets.get(url);
+  if (body === undefined) {
+    throw new Error(`${chain.at(-1) || 'a page'} imports ${url}, which the build does not emit`);
+  }
+  const text = body.replace(IMPORT, (whole, keyword, gap, quote, spec) =>
+    (spec.startsWith('/assets/')
+      ? `${keyword}${gap}${quote}${spec}?v=${hashOf(spec, [...chain, url])}${quote}`
+      : whole));
+  hashes.set(url, hash(text));
+  emitted.set(url, text);
+  return hashes.get(url);
+}
+
+/**
+ * Point a page at the hashed URL of every asset it names. Throws on a reference the build
+ * does not emit, because a 404 inside a built page is worth failing a deploy for.
+ */
+const linkAssets = (html) => html.replace(/\/assets\/[\w./-]+/g, (url) => {
+  const h = hashes.get(url);
+  if (!h) throw new Error(`a page references ${url}, which the build does not emit`);
+  return `${url}?v=${h}`;
+});
 
 async function write(rel, text) {
   const path = join(OUT, rel);
@@ -134,8 +217,12 @@ await write('.nojekyll', '');
 await write('robots.txt', 'User-agent: *\nDisallow: /\n');
 await copyFile(join(SRC, 'site/favicon.svg'), join(OUT, 'favicon.svg'));
 
-await copyDir('core', 'assets/core', absolutise);
-await copyDir('vendor', 'assets/vendor');
+await stage('core', 'assets/core');
+await stage('vendor', 'assets/vendor');
+await stage('f', 'assets/f');
+await stage('w', 'assets/w');
+for (const url of [...assets.keys()]) hashOf(url);
+for (const [url, text] of emitted) await write(url.slice(1), text);
 
 // Printable sheets keep their own filenames; they are opened from the kit page.
 // Per-class values (klasse, anzahl) stay dynamic; everything site-wide is baked in.
@@ -145,39 +232,44 @@ const siteValues = {
   kontakt: cfg.contact,
   version: cfg.noticeVersion,
 };
-const prepare = (text) => fillDefaults(absolutise(text), siteValues);
+const prepare = (text) => linkAssets(fillDefaults(absolutise(text), siteValues));
 
 await copyDir('kit', 'kit', prepare, ['notice.html']);
 await write('merkblatt/index.html', prepare(await readFile(join(SRC, 'kit/notice.html'), 'utf8')));
 
-// Pages not written yet. Stubs rather than 404s, so the domain and the certificate can
-// go live now and the printed URLs are never dead.
+// Not written yet. A stub rather than a 404, so the domain and the certificate can go
+// live now and the printed URLs are never dead.
 await write('start/index.html', stub('Start für Klassendelegierte', 'für neu gewählte Klassendelegierte'));
-await write('w/index.html', stub('Werkstatt', 'für die Klassendelegierten zum Erfassen der Angaben'));
 
 // The parent form: one page per class. The class is written into <meta> tags rather than a
 // query string, so the page needs no inline script and its CSP can stay script-src 'self'.
 // Only the shared assets go to /assets/f/; index.html is a template, not a served page.
-const formAssetHashes = {};
-for (const file of ['form.css', 'form.js']) {
-  const body = absolutise(await readFile(join(SRC, 'f', file), 'utf8'));
-  formAssetHashes[file] = hash(body);
-  await write(join('assets/f', file), body);
-}
-let formTemplate = await readFile(join(SRC, 'f/index.html'), 'utf8');
-for (const [file, h] of Object.entries(formAssetHashes)) {
-  formTemplate = formTemplate.replaceAll(`/assets/f/${file}`, `/assets/f/${file}?v=${h}`);
-}
+const formTemplate = linkAssets(await readFile(join(SRC, 'f/index.html'), 'utf8'));
 for (const c of classes) {
-  const seite = formTemplate
-    .replace('<meta name="kk-klasse" content="Klasse 3a">', `<meta name="kk-klasse" content="${c.parsed.display}">`)
-    .replace('<meta name="kk-slug" content="3a">', `<meta name="kk-slug" content="${c.parsed.slug}">`)
-    .replace('<meta name="kk-jahr" content="2026/27">', `<meta name="kk-jahr" content="${cfg.schoolYear}">`)
-    .replace('<meta name="kk-schule" content="Schule Bungertwies">', `<meta name="kk-schule" content="${cfg.school}">`)
-    .replace('<meta name="kk-merkblatt" content="2026-08-1">', `<meta name="kk-merkblatt" content="${cfg.noticeVersion}">`)
-    .replace('<meta name="kk-basis" content="https://bungi-eltern.mrpia.ch">', `<meta name="kk-basis" content="${cfg.baseUrl}">`);
-  await write(`f/${c.parsed.slug}/index.html`, seite);
+  let page = formTemplate;
+  page = setMeta(page, 'class', c.parsed.display);
+  page = setMeta(page, 'slug', c.parsed.slug);
+  page = setMeta(page, 'year', cfg.schoolYear);
+  page = setMeta(page, 'school', cfg.school);
+  page = setMeta(page, 'notice', cfg.noticeVersion);
+  page = setMeta(page, 'base', cfg.baseUrl);
+  await write(`f/${c.parsed.slug}/index.html`, page);
 }
+
+// The workbench: one page, not one per class. The class comes from the project a delegate
+// opened, not from the URL, so the whole class list is baked in for the picker.
+// `name:count` per class, pipe-separated — readable in view-source and parsed in one line.
+for (const c of classes) {
+  if (/[|:]/.test(c.parsed.display)) throw new Error(`class name breaks the meta list: ${c.name}`);
+}
+let workbench = linkAssets(await readFile(join(SRC, 'w/index.html'), 'utf8'));
+workbench = setMeta(workbench, 'year', cfg.schoolYear);
+workbench = setMeta(workbench, 'school', cfg.school);
+workbench = setMeta(workbench, 'notice', cfg.noticeVersion);
+workbench = setMeta(workbench, 'base', cfg.baseUrl);
+workbench = setMeta(workbench, 'classes',
+  classes.map((c) => `${c.parsed.display}:${c.count}`).join('|'));
+await write('w/index.html', workbench);
 
 // Landing page.
 await write('index.html', shell(`Elternrat ${cfg.school}`, `<h1>Elternrat ${cfg.school}</h1>

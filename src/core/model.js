@@ -21,10 +21,13 @@ export const PROJECT_VERSION = 1;
 /** Consent that was never recorded. Distinct from a recorded "no". */
 export const UNKNOWN = null;
 
-export function newProject({ classLabel, schoolYear, startSchoolYear, now }) {
+export function newProject({ classLabel, schoolYear, startSchoolYear, delegates, now }) {
   return {
     v: PROJECT_VERSION,
     classLabel: classLabel || '',
+    // Free text, not a list: there are normally two delegates, and what a printed class
+    // list needs is a line saying who to reply to, not a structure to query.
+    delegates: delegates || '',
     schoolYear: schoolYear || '',
     startSchoolYear: startSchoolYear || schoolYear || '',
     created: now || '',
@@ -127,6 +130,19 @@ const REPORTABLE = {
 const DERIVED = ['mobileDisplay', 'mobileType'];
 
 /**
+ * A field's value as a delegate should read it.
+ *
+ * The stored number is E.164 because that is what a vCard and a WhatsApp link need, but
+ * "Mobilnummer: +41791234567 → +41790000000" asks somebody to spot the difference in two
+ * runs of digits. The spaced form is the same number, grouped the way it is written down.
+ *
+ * Safe to call before the DERIVED fields are copied: at that point `mobileDisplay` on the
+ * target is still the old number, which is exactly the side of the arrow it belongs on.
+ */
+const forReading = (person, field) =>
+  (field === 'mobile' ? person.mobileDisplay || person.mobile : person[field]);
+
+/**
  * Copy incoming values over stored ones — but never clear a stored value with an empty
  * incoming one.
  *
@@ -140,7 +156,7 @@ function copyNonEmpty(target, incoming) {
   for (const field of Object.keys(REPORTABLE)) {
     if (incoming[field] && incoming[field] !== target[field]) {
       if (target[field]) {
-        changes.push(`${REPORTABLE[field]}: ${target[field]} → ${incoming[field]}`);
+        changes.push(`${REPORTABLE[field]}: ${forReading(target, field)} → ${forReading(incoming, field)}`);
       }
       target[field] = incoming[field];
     }
@@ -159,6 +175,9 @@ function copyNonEmpty(target, incoming) {
 
 const JA_NEIN = (v) => (v === UNKNOWN ? 'unbekannt' : v ? 'ja' : 'nein');
 
+/** The two consent questions, as a delegate reads them. */
+export const CONSENT_LABEL = { classList: 'Klassenliste', whatsappGroup: 'WhatsApp-Gruppe' };
+
 function consentFrom(s, now) {
   // No consent block at all means nobody ever asked — an old list, a WhatsApp group, last
   // year's file. That is not a "no", and it must not be treated as one.
@@ -168,9 +187,13 @@ function consentFrom(s, now) {
       recordedAt: '', source: 'legacy', noticeVersion: '',
     };
   }
+  // A field left out of the consent block is unknown, not a no. That matters for a paper
+  // slip where the parent ticked one box and ignored the other: recording the ignored one
+  // as a refusal would hide a family that simply has not answered yet.
+  const tri = (v) => (v === UNKNOWN || v === undefined ? UNKNOWN : !!v);
   return {
-    classList: !!s.consent.classList,
-    whatsappGroup: !!s.consent.whatsappGroup,
+    classList: tri(s.consent.classList),
+    whatsappGroup: tri(s.consent.whatsappGroup),
     recordedAt: s.date || now || '',
     source: s.source || 'form',
     noticeVersion: s.noticeVersion || '',
@@ -190,6 +213,7 @@ export function ingestSubmission(project, s, opts = {}) {
   let somethingNew = false;
 
   const childIds = [];
+  const childNames = [];
   for (const rawChild of s.children || []) {
     const child = {
       firstName: normalizeName(rawChild.firstName || ''),
@@ -206,6 +230,7 @@ export function ingestSubmission(project, s, opts = {}) {
       changes.push(`Nachname ergänzt: ${existing.firstName} ${child.lastName}`);
     }
     childIds.push(existing.id);
+    childNames.push(existing.firstName);
   }
 
   const consent = consentFrom(s, now);
@@ -229,10 +254,10 @@ export function ingestSubmission(project, s, opts = {}) {
       // withdrawal takes effect.
       if (s.consent) {
         if (existing.consent.classList !== consent.classList) {
-          changes.push(`Klassenliste: ${JA_NEIN(existing.consent.classList)} → ${JA_NEIN(consent.classList)}`);
+          changes.push(`${CONSENT_LABEL.classList}: ${JA_NEIN(existing.consent.classList)} → ${JA_NEIN(consent.classList)}`);
         }
         if (existing.consent.whatsappGroup !== consent.whatsappGroup) {
-          changes.push(`WhatsApp-Gruppe: ${JA_NEIN(existing.consent.whatsappGroup)} → ${JA_NEIN(consent.whatsappGroup)}`);
+          changes.push(`${CONSENT_LABEL.whatsappGroup}: ${JA_NEIN(existing.consent.whatsappGroup)} → ${JA_NEIN(consent.whatsappGroup)}`);
         }
         existing.consent = consent;
       }
@@ -244,9 +269,41 @@ export function ingestSubmission(project, s, opts = {}) {
   project.log.push({
     at: now,
     kind: 'submission',
-    text: `${outcome}: ${(s.children || []).map((c) => c.firstName).join(', ') || 'ohne Kind'}`,
+    // The normalised names, not what the parent typed: this log is a record a delegate
+    // reads later, and "new: léa" reads like the tool did not work.
+    text: `${outcome}: ${childNames.join(', ') || 'ohne Kind'}`,
   });
   return { outcome, children: childIds, notes, changes };
+}
+
+/**
+ * Record a consent answer the delegate was given directly — by phone, at the door, or on a
+ * slip that came in after the form.
+ *
+ * Separate from `ingestSubmission` because there is no submission: nothing arrives, a
+ * delegate simply now knows something. A withdrawal has to be recordable in seconds, and
+ * it has to leave a trace, because "when did she say no?" is the question that gets asked
+ * afterwards.
+ *
+ * @param {'classList'|'whatsappGroup'} field
+ * @param {boolean|null} value `UNKNOWN` puts the question back to unanswered
+ * @returns {boolean} whether anything changed
+ */
+export function setConsent(project, caregiverId, field, value, now = '') {
+  const c = project.caregivers.find((x) => x.id === caregiverId);
+  if (!c || !(field in CONSENT_LABEL)) return false;
+  if (c.consent[field] === value) return false;
+
+  const before = JA_NEIN(c.consent[field]);
+  c.consent = {
+    ...c.consent, [field]: value, recordedAt: now || c.consent.recordedAt, source: 'delegate',
+  };
+  project.log.push({
+    at: now,
+    kind: 'consent',
+    text: `${CONSENT_LABEL[field]}: ${before} → ${JA_NEIN(value)} (${`${c.firstName} ${c.lastName}`.trim()})`,
+  });
+  return true;
 }
 
 // ---------------------------------------------------------------- queries

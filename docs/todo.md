@@ -3,9 +3,11 @@
 One page, ordered by what unblocks the most. Written so a spare hour can be spent without
 first reconstructing context. Each item says what "done" means.
 
-Deadline that governs everything: the first class parents' evening (Elternabend) is within
-four weeks of 2026-08-20, so roughly mid-September 2026. Printing needs to happen in the
-first days of September.
+Date that governs everything: the first class parents' evening (Elternabend) is
+**2026-09-03**. Nothing has been printed and no class is using the tool, so that date is a
+decision point rather than a deadline — what to actually use gets chosen a few weeks
+beforehand. Worst case is no rollout this school year and a sound basis for the next one,
+which is why none of the below is worth rushing into a shape that has to be undone.
 
 ## Done and deployed
 
@@ -17,23 +19,14 @@ first days of September.
 - Parent form at `/f/<class>/` for all 13 classes, German with an English toggle.
 - Hosting: `mrpia/bungi-eltern` on GitHub Pages, live at
   <https://bungi-eltern.mrpia.ch> over HTTPS, deploy gated on `npm test`.
+- Workbench `/w/`: deep-link intake with a confirmation step, IndexedDB with autosave,
+  the list grouped by child, three-state consent toggling, paper-form entry, project file
+  save and load, delete. All ten acceptance checks in [`workbench.md`](workbench.md) walked
+  in a real browser. 98 tests.
 
 ---
 
-## 1 — Workbench `/w/` · the critical one
-
-Without it, a tapped submission link lands on a placeholder and the whole digital route is
-dead. Everything else on this list is smaller.
-
-**Spec:** [`docs/workbench.md`](workbench.md). Written to be built cold, with ten acceptance
-checks at the end.
-
-**Done when:** all ten acceptance checks pass by hand.
-
-**Start with:** IndexedDB storage plus the deep-link intake. Checks 1 to 7 all hang off
-those two.
-
-## 2 — The six outputs
+## 1 — The six outputs
 
 Needed within a week or two *after* the parents' evening, not before it, because data has to
 exist first.
@@ -51,7 +44,7 @@ missing. `forClassList()` and `missingChildren()` in `model.js` supply items 1 a
 **Done when:** a class list, a `.vcf` and both CSVs come out of a project with one click
 each, and nothing without recorded consent appears in any of them.
 
-## 3 — Delegate self-setup `/start/`
+## 2 — Delegate self-setup `/start/`
 
 The QR code on the teacher's sheet points here. A newly elected delegate opens it on a phone
 and gets back their class form link plus a ready-to-paste announcement.
@@ -63,7 +56,7 @@ German message they can paste into Escola or a chat.
 **Done when:** a phone-only run produces a working link that prefills the recipient in the
 parent form.
 
-## 4 — Confirm the class list
+## 3 — Confirm the class list
 
 `site.config.json` currently lists a **guess**: KiGa 1–3, Klasse 1a/1b, 2a/2b, 3a/3b, 4a/4b,
 5, 6. Which years actually split a/b changes annually.
@@ -71,14 +64,14 @@ parent form.
 **Done when:** the 13 entries match reality. A name the parser cannot read fails the build
 rather than producing a wrong slug, so a mistake here is loud rather than silent.
 
-## 5 — Batch generator for the print run
+## 4 — Batch generator for the print run
 
 Nice-to-have, not a blocker: `/kit/` already offers per-class links, so printing means
 opening 13 pages and typing "22" into the print dialog.
 
 **Done when:** one run produces 13 teacher sheets plus 13 labelled family-sheet stacks.
 
-## 6 — Single-file offline build
+## 5 — Single-file offline build
 
 An inliner (~50 lines of Node) folding everything into one `dist/klassenkontakte.html`,
 because `file://` blocks ES module imports. For delegates who want a local copy.
@@ -86,7 +79,7 @@ because `file://` blocks ES module imports. For delegates who want a local copy.
 **Watch out:** `file://` has a different origin and therefore different IndexedDB storage
 than the hosted page. See the trap section in [`docs/workbench.md`](workbench.md).
 
-## 7 — Verify contact cards on real devices
+## 6 — Verify contact cards on real devices
 
 An unverified assumption: that vCard 3.0 `CATEGORIES` survives import into iOS Contacts,
 Google Contacts and Outlook as a usable group, and that a stable `UID` makes a re-import
@@ -95,7 +88,7 @@ update rather than duplicate.
 **Done when:** all three have been tried on real devices and the export adjusted to whatever
 actually holds.
 
-## 8 — QR scanning in the workbench
+## 7 — QR scanning in the workbench
 
 Deliberately last. It existed to solve in-room capture by a delegate's laptop, but delegates
 are elected at the parents' evening and have only phones, so there is no in-room capture.
@@ -110,7 +103,8 @@ Keep only as a later convenience for a delegate sitting at a computer.
   (Gruppenwähler) means the delegates can message their whole class without holding any
   contact data, which shrinks the dataset to opt-in families only. A yes to the fourth
   question — whether the city's «Meine Kinder» service or Escola will cover this anyway —
-  could make most of this tool unnecessary. Worth knowing before item 2 gets built.
+  could make most of this tool unnecessary. Worth knowing before item 1 gets built — the
+workbench survives either answer, the output *formats* are what a yes would change.
 *(The HTTPS certificate landed on 2026-08-20 and enforcement is on. See the ordering trap
 in [`docs/hosting.md`](hosting.md) if a second subdomain is ever set up.)*
 
@@ -129,4 +123,13 @@ in [`docs/hosting.md`](hosting.md) if a second subdomain is ever set up.)*
 - **A visible duplicate beats a silent mix-up.** Where a match is ambiguous, create a second
   entry and let the delegate see it.
 - `npm test` gates every deploy. That is deliberate: `test/qr.test.js` keeps the printed QR
-  codes scannable, so a change that would ruin 290 sheets fails in CI instead.
+  codes scannable, so a change that would ruin a print run fails in CI instead.
+- **`npm test` passing is not evidence that a page works.** Four bugs found on 2026-08-20
+  were all invisible to it: the build's `<meta>` substitution had silently stopped matching
+  after the German→English rename, so twelve of thirteen live form pages announced
+  "Klasse 3a"; two CSS selectors still carried their German names; and `.hidden` lost a
+  specificity tie to `.button`. Every one needed either the built output or a browser.
+- **Prefer the primitive that fails loudly.** `String.replace` treats a missing needle as
+  success, which is what let the `<meta>` bug ship. `tools/build.mjs` now throws instead,
+  and `site/` is gitignored, so a build-time throw is the only place such a thing can be
+  caught before it is live.

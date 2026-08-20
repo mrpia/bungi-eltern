@@ -71,7 +71,7 @@ input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-colo
 
 .pair { display: flex; gap: .7rem; }
 .pair > label { flex: 1; }
-.pair > label.schmal { flex: 0 0 6.5rem; }
+.pair > label.narrow { flex: 0 0 6.5rem; }
 
 .note { font-size: .84rem; margin: .25rem 0 0; }
 .note.warn { color: var(--warn); }
@@ -107,7 +107,7 @@ input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-colo
   background: var(--accent); color: #fff; margin-top: .5rem;
 }
 .button:disabled { opacity: .45; cursor: not-allowed; }
-.button.zweit { background: var(--field); color: var(--accent); border: 1.5px solid var(--accent); }
+.button.secondary { background: var(--field); color: var(--accent); border: 1.5px solid var(--accent); }
 
 .error {
   background: var(--warn-surface); color: var(--warn); border-radius: 8px;
@@ -121,6 +121,6 @@ input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-colo
   margin: 0; white-space: pre-wrap; word-break: break-word;
   font: .92rem/1.5 Consolas, Menlo, monospace; color: var(--ink);
 }
-.hidden { display: none; }
+.hidden { display: none !important; }
 .footer { color: var(--muted); font-size: .82rem; margin-top: 2.5rem; }
 .footer a { color: var(--accent); }
