@@ -17,6 +17,26 @@ const OUT = join(ROOT, 'site');
 
 const cfg = JSON.parse(await readFile(join(ROOT, 'site.config.json'), 'utf8'));
 
+/**
+ * Bake the site-wide values into the markup at build time.
+ *
+ * The sheets fill their placeholders from URL parameters at runtime, which is right for
+ * per-class values like the class name. It is wrong for the notice: `/merkblatt/` is a
+ * standalone document, a consent record points at it by version, and people archive and
+ * print it. With JavaScript off, an empty contact span means the one document that tells a
+ * parent how to withdraw consent does not say who to write to.
+ *
+ * So anything that comes from site.config.json is substituted here. Runtime parameters
+ * still override, they just no longer have to be present.
+ */
+function fillDefaults(text, werte) {
+  return text.replace(
+    /<(span|div)([^>]*?)data-feld="([a-z]+)"([^>]*?)><\/\1>/g,
+    (whole, tag, pre, feld, post) =>
+      werte[feld] === undefined ? whole : `<${tag}${pre}data-feld="${feld}"${post}>${werte[feld]}</${tag}>`,
+  );
+}
+
 /** Relative module imports become absolute, so nesting depth stops mattering. */
 const absolutise = (text) =>
   text.replace(/(['"])\.\.\/core\//g, '$1/assets/core/')
@@ -105,8 +125,17 @@ await copyDir('core', 'assets/core', absolutise);
 await copyDir('vendor', 'assets/vendor');
 
 // Printable sheets keep their own filenames; they are opened from the kit page.
-await copyDir('kit', 'kit', absolutise);
-await write('merkblatt/index.html', absolutise(await readFile(join(SRC, 'kit/merkblatt.html'), 'utf8')));
+// Per-class values (klasse, anzahl) stay dynamic; everything site-wide is baked in.
+const seitenWerte = {
+  schule: cfg.schule,
+  jahr: cfg.schuljahr,
+  kontakt: cfg.kontakt,
+  version: cfg.merkblattVersion,
+};
+const vorbereiten = (text) => fillDefaults(absolutise(text), seitenWerte);
+
+await copyDir('kit', 'kit', vorbereiten);
+await write('merkblatt/index.html', vorbereiten(await readFile(join(SRC, 'kit/merkblatt.html'), 'utf8')));
 
 // Pages not written yet. Stubs rather than 404s, so the domain and the certificate can
 // go live now and the printed URLs are never dead.
