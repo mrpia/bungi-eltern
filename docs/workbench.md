@@ -3,6 +3,9 @@
 Goal: this file should be enough to build `/w/` in a fresh session without knowing how the
 project got here. Where a decision looks open, it has been made here.
 
+Language: see [`CLAUDE.md`](../CLAUDE.md). Identifiers, ids, CSS classes and codes in
+English; everything a delegate reads on screen in German.
+
 ## Purpose
 
 The workbench is the delegates' tool. It takes in parents' submissions, holds the class
@@ -19,8 +22,8 @@ Escola Excel import, the "new school year" routine.
 
 ```
 src/w/index.html      shell, values in <meta>, no inline script, no inline style
-src/w/werkstatt.css   → /assets/w/werkstatt.css
-src/w/werkstatt.js    → /assets/w/werkstatt.js
+src/w/workbench.css   → /assets/w/workbench.css
+src/w/workbench.js    → /assets/w/workbench.js
 ```
 
 The build treats `src/w/` exactly like `src/f/` (see `tools/build.mjs`), but writes **one**
@@ -50,8 +53,9 @@ Parents send a message containing a readable block and, below it, a link of the 
    button — on a shared family laptop that is another family's contact details sitting in a
    history other people can see. This is the step most likely to be forgotten when
    rebuilding.
-3. If decoding fails, show `r.text` (a German sentence; `r.code` is there for branching) plus a note that the readable part of the
-   message can be typed in by hand. Never a blank page.
+3. If decoding fails, show `r.text` — a German sentence; `r.code` is there for branching —
+   plus a note that the readable part of the message can be typed in by hand. Never a blank
+   page.
 4. On success do **not** store immediately. Show a confirmation step: `readableSummary()`
    of the submission, and below it what taking it in would do. Get that by running
    `ingestSubmission()` against a **copy** of the project (`structuredClone`) and
@@ -75,7 +79,7 @@ children in two classes and hold both roles.
 Source of truth in daily use is IndexedDB. The project file is backup and migration.
 
 ```
-Database:  klassenkontakte
+Database:  klassenkontakte          // the product name, a proper noun
 Version:   1
 Store:     projects, keyPath 'slug'      // '3a', 'kiga1', ...
 Record:    { slug, project, savedAt }    // project = the object from model.js

@@ -279,9 +279,9 @@ per family, 580 sheets for the school.
 
 | File | Copies | Contents |
 |---|---|---|
-| `src/kit/blatt.html` | 1 per family (~290) | short intro, routes (QR/paper), form, consent |
-| `src/kit/lehrblatt.html` | 1 per class (13) | instructions for the teacher, a paragraph to read aloud, 2 delegate slips |
-| `src/kit/merkblatt.html` | 1 per class + online | the full information notice |
+| `src/kit/family-sheet.html` | 1 per family (~290) | short intro, routes (QR/paper), form, consent |
+| `src/kit/teacher-sheet.html` | 1 per class (13) | instructions for the teacher, a paragraph to read aloud, 2 delegate slips |
+| `src/kit/notice.html` | 1 per class + online | the full information notice |
 
 Two things moved deliberately:
 
@@ -299,9 +299,9 @@ content height against the page box. Rerun it after every text edit.
 
 | Sheet | Content | Printable | Spare |
 |---|---|---|---|
-| blatt.html | 225.1 mm | 269 mm | 43.9 mm |
-| lehrblatt.html | 228.1 mm | 269 mm | 40.9 mm |
-| merkblatt.html | 251.4 mm | 267 mm | 15.6 mm |
+| family-sheet.html | 225.1 mm | 269 mm | 43.9 mm |
+| teacher-sheet.html | 228.1 mm | 269 mm | 40.9 mm |
+| notice.html | 251.4 mm | 267 mm | 15.6 mm |
 
 ## Fonts are pinned to what exists
 
@@ -314,7 +314,7 @@ means doubling a 290-sheet print run.
 ## Merkblatt version string is load-bearing
 
 Every consent record stores which version of the notice the parent saw. Editing
-`merkblatt.html` therefore means bumping `version` in the same commit, otherwise the stored
+`notice.html` therefore means bumping `version` in the same commit, otherwise the stored
 consent points at text that no longer exists.
 
 ## Still missing before anything can be printed
@@ -374,9 +374,9 @@ to push the code to a denser version, a test fails instead of 290 sheets being u
 
 | Sheet | Content | Printable | Spare | QR |
 |---|---|---|---|---|
-| blatt.html | 231.1 mm | 269 mm | 37.9 mm | v3, 18.8 mm code in a 24 mm box, 0.65 mm per module |
-| lehrblatt.html | 228.1 mm | 269 mm | 40.9 mm | 2 × same |
-| merkblatt.html | 246.7 mm | 267 mm | 20.3 mm | none |
+| family-sheet.html | 231.1 mm | 269 mm | 37.9 mm | v3, 18.8 mm code in a 24 mm box, 0.65 mm per module |
+| teacher-sheet.html | 228.1 mm | 269 mm | 40.9 mm | 2 × same |
+| notice.html | 246.7 mm | 267 mm | 20.3 mm | none |
 
 ## Left for the print run
 
@@ -427,6 +427,6 @@ the paper asking for it. Belongs to the data-model task, with tests.
 
 | Sheet | Content | Printable | Spare |
 |---|---|---|---|
-| blatt.html | 239.2 mm | 269 mm | 29.8 mm |
-| lehrblatt.html | 228.1 mm | 269 mm | 40.9 mm |
-| merkblatt.html | 246.7 mm | 267 mm | 20.3 mm |
+| family-sheet.html | 239.2 mm | 269 mm | 29.8 mm |
+| teacher-sheet.html | 228.1 mm | 269 mm | 40.9 mm |
+| notice.html | 246.7 mm | 267 mm | 20.3 mm |

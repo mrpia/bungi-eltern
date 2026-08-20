@@ -121,7 +121,7 @@ scannable, so a change that would produce unreadable codes cannot reach the shee
 | `/` | Landing page, explains that no data lives here | done |
 | `/merkblatt/` | Full information notice, linked from every sheet | done |
 | `/kit/` | Internal: per-class links to the printable sheets | interim |
-| `/kit/blatt.html`, `/kit/lehrblatt.html` | The printable sheets | done |
+| `/kit/family-sheet.html`, `/kit/teacher-sheet.html` | The printable sheets | done |
 | `/start/` | Delegate self-setup, 60 seconds on a phone | placeholder |
 | `/f/<class>/` | Parent form, one per class (`/f/3a/`, `/f/kiga1/`) | done |
 | `/w/` | Delegate workbench | placeholder |

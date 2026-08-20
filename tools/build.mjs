@@ -61,11 +61,12 @@ async function write(rel, text) {
   return rel;
 }
 
-async function copyDir(fromRel, toRel, transform) {
+async function copyDir(fromRel, toRel, transform, skip = []) {
   const files = await readdir(join(SRC, fromRel));
   const written = [];
   for (const f of files) {
     if (f.startsWith('_')) continue;                    // dev-only helpers stay out
+    if (skip.includes(f)) continue;
     const body = await readFile(join(SRC, fromRel, f), 'utf8');
     written.push(await write(join(toRel, f), transform ? transform(body) : body));
   }
@@ -146,8 +147,8 @@ const siteValues = {
 };
 const prepare = (text) => fillDefaults(absolutise(text), siteValues);
 
-await copyDir('kit', 'kit', prepare);
-await write('merkblatt/index.html', prepare(await readFile(join(SRC, 'kit/merkblatt.html'), 'utf8')));
+await copyDir('kit', 'kit', prepare, ['notice.html']);
+await write('merkblatt/index.html', prepare(await readFile(join(SRC, 'kit/notice.html'), 'utf8')));
 
 // Pages not written yet. Stubs rather than 404s, so the domain and the certificate can
 // go live now and the printed URLs are never dead.
@@ -158,7 +159,7 @@ await write('w/index.html', stub('Werkstatt', 'für die Klassendelegierten zum E
 // query string, so the page needs no inline script and its CSP can stay script-src 'self'.
 // Only the shared assets go to /assets/f/; index.html is a template, not a served page.
 const formAssetHashes = {};
-for (const file of ['formular.css', 'formular.js']) {
+for (const file of ['form.css', 'form.js']) {
   const body = absolutise(await readFile(join(SRC, 'f', file), 'utf8'));
   formAssetHashes[file] = hash(body);
   await write(join('assets/f', file), body);
@@ -212,8 +213,8 @@ ${classes.map((c) => {
             `&version=${encodeURIComponent(cfg.noticeVersion)}&count=${c.count}` +
             `&base=${encodeURIComponent(cfg.baseUrl)}`;
   return `<tr style="border-top:1px solid #ccc"><td>${c.parsed.display}</td>` +
-    `<td><a href="/kit/lehrblatt.html?${q}">öffnen</a></td>` +
-    `<td><a href="/kit/blatt.html?${q}">öffnen</a></td>` +
+    `<td><a href="/kit/teacher-sheet.html?${q}">öffnen</a></td>` +
+    `<td><a href="/kit/family-sheet.html?${q}">öffnen</a></td>` +
     `<td><a href="/f/${c.parsed.slug}/">/f/${c.parsed.slug}/</a></td></tr>`;
 }).join('\n')}
 </table>`));
