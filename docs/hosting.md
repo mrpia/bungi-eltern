@@ -24,6 +24,17 @@ parents' council project should not hang off an account tied to employment, and 
 identity is set per-repository to `pa.galiana@gmail.com` so the work address never appears
 in a public history.
 
+## Stand 2026-08-20
+
+Erledigt: Repository `mrpia/bungi-eltern` (öffentlich), erster Push, Pages auf
+`build_type=workflow`, erster Deploy erfolgreich, Custom Domain
+`bungi-eltern.mrpia.ch` eingetragen. `https://mrpia.github.io/bungi-eltern/`
+antwortet mit 301 auf die Custom Domain — das bestätigt, dass die absoluten
+Asset-Pfade für das echte Ziel stimmen.
+
+Offen, und nur von Pierre-Arnaud zu machen: der DNS-Eintrag (Schritt 4). Danach
+stellt GitHub das Zertifikat aus und `https_enforced` kann auf `true`.
+
 ## One-time setup
 
 1. **Authenticate the personal account.** Interactive, so it has to be run by hand:
