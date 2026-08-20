@@ -244,3 +244,16 @@ legend { font-weight: 600; font-size: 1rem; padding: 0; margin-bottom: .1rem; }
 .wip strong { display: block; }
 .wip a { color: inherit; }
 @media print { .wip { display: none; } }
+
+/* The how-to. A <details> rather than a permanent block: a delegate reads it once in
+   September and then wants the list, not the manual. Opened by the page while the class is
+   still empty — see drawMain(). */
+.how {
+  border: 1px solid var(--line); border-radius: 10px;
+  padding: .6rem .9rem; margin: 0 0 1.1rem; font-size: .92rem;
+}
+.how > summary { cursor: pointer; font-weight: 600; color: var(--accent); }
+.how > summary:hover { text-decoration: underline; }
+.how[open] > summary { margin-bottom: .7rem; }
+.how p { margin: 0 0 .7rem; }
+.how p:last-child { margin: 0; }

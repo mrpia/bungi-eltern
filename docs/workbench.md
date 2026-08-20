@@ -178,6 +178,15 @@ look visibly different from "no"; it is the reason this tool exists.
 
 Counters at the top: "14 of 22 families · 11 on the class list · 3 without consent".
 
+**The instructions.** A `<details>` above the list, opened by the page while the class is
+still empty and collapsed once there is data. *Learned from a delegate's-eye reading of the
+first build:* the tool never said what to do with the message a parent sends. It has to name
+the actual line the parent's message contains — «Für die Delegierten zum Übernehmen:» — so a
+delegate can find it in a long WhatsApp thread, and it has to say **use one device for the
+whole class**, because the dataset is per browser per origin and v1 replaces rather than
+merges. A delegate who takes some families in on a phone and others on a laptop has no way
+to combine them.
+
 **Typing in a paper form.** The same form as `/f/`, but stored locally instead of sent.
 Reachable via "add a family by hand". Keyboard-friendly: tab between fields, Enter saves and
 opens a fresh empty form, because a delegate at the kitchen table types twenty slips in a row.

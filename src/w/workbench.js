@@ -294,8 +294,8 @@ function drawFamilies() {
   list.textContent = '';
 
   if (!project.children.length) {
-    list.append(el('p', 'hint', 'Noch keine Angaben. Übernehmen Sie einen Link von den '
-      + 'Eltern, oder tippen Sie einen Papierzettel ein.'));
+    list.append(el('p', 'hint', 'Noch keine Angaben. Die Anleitung oben erklärt, wie Sie '
+      + 'eine Nachricht der Eltern übernehmen.'));
     return;
   }
 
@@ -318,6 +318,10 @@ function drawMain() {
   drawHead();
   drawCounters();
   drawFamilies();
+  // Open the instructions while there is nothing to look at, closed once the delegate is
+  // under way. With an empty list the only thing that redraws is adding the first family,
+  // which closes it anyway, so this never fights a delegate who shut it deliberately.
+  $('how').open = project.children.length === 0;
 }
 
 $('families').addEventListener('click', async (event) => {
@@ -462,6 +466,9 @@ function showIntake({ title, error = '', review = false, outcome = false, button
   $('intake-error').classList.toggle('hidden', !error);
   $('intake-review').classList.toggle('hidden', !review);
   $('intake-outcome').classList.toggle('hidden', !outcome);
+  // Only where there is something to accept: on a mismatch or a broken link there is
+  // nothing to confirm, and "nothing is saved yet" answers a question nobody asked.
+  $('intake-hint').classList.toggle('hidden', !outcome);
   if (!outcome) $('intake-notes-box').classList.add('hidden');
   for (const id of INTAKE_BUTTONS) $(id).classList.toggle('hidden', !buttons.includes(id));
   $('intake-discard').textContent = discardLabel;

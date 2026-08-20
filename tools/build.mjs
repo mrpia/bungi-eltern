@@ -39,6 +39,28 @@ function fillDefaults(text, values) {
 }
 
 /**
+ * Links whose target and visible text both come from site.config.json.
+ *
+ * Both sides in one substitution on purpose. The Merkblatt is printed and archived, and a
+ * consent record points at it by version — a sheet of paper where the printed URL and the
+ * link behind it disagree is a document that lies, and it cannot be corrected after the
+ * print run. This is the same two-sides-of-a-boundary trap CLAUDE.md warns about, so the
+ * two sides are never written separately.
+ *
+ * Source markup is `<a data-link="repo"></a>`, with no href of its own to drift.
+ */
+function fillLinks(text, values) {
+  return text.replace(/<a([^>]*?)data-link="([a-z]+)"([^>]*?)><\/a>/g,
+    (whole, pre, field, post) => {
+      const url = values[field];
+      if (url === undefined) return whole;
+      if (/href=/.test(pre + post)) throw new Error(`data-link="${field}" already has an href`);
+      // Shown without the scheme: it is read off paper and typed back in by hand.
+      return `<a${pre}href="${escapeAttr(url)}"${post}>${url.replace(/^https?:\/\//, '')}</a>`;
+    });
+}
+
+/**
  * Content hash appended to asset URLs, so a page never runs a stale script.
  *
  * HTML and JS are separately cached files. After a deploy a browser can hold the old
@@ -293,8 +315,9 @@ const siteValues = {
   kontakt: cfg.contact,
   version: cfg.noticeVersion,
 };
-const prepare = (text) =>
-  withWip(linkAssets(fillDefaults(absolutise(text), siteValues)), { styled: true });
+const prepare = (text) => withWip(
+  linkAssets(fillLinks(fillDefaults(absolutise(text), siteValues), { repo: cfg.repoUrl })),
+  { styled: true });
 
 await copyDir('kit', 'kit', prepare, ['notice.html']);
 await write('merkblatt/index.html', prepare(await readFile(join(SRC, 'kit/notice.html'), 'utf8')));

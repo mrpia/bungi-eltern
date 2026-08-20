@@ -62,6 +62,10 @@
     <div id="projects-list"></div>
   </div>
 
+  <p class="hint">Danach übernehmen Sie die Angaben aus den Nachrichten der Eltern: in
+  jeder Nachricht steht unten ein Link, den Sie antippen. Die Anleitung dazu steht auf der
+  nächsten Seite.</p>
+
   <h2 id="setup-title">Klasse anlegen</h2>
   <label>
     <span class="field-label">Klasse</span>
@@ -81,6 +85,8 @@
 <!-- ------------------------------------------------------------- taking a submission in -->
 <section class="screen hidden" id="screen-intake">
   <h1 id="intake-title">Angaben übernehmen?</h1>
+  <p class="hint hidden" id="intake-hint">Noch ist nichts gespeichert. Bitte die Angaben
+  anschauen und unten bestätigen.</p>
 
   <div class="message warn hidden" id="intake-error"></div>
 
@@ -114,6 +120,28 @@
     <button type="button" class="button danger" id="wipe">Alles löschen</button>
   </nav>
   <input type="file" id="main-file" accept=".json,application/json" class="offscreen">
+
+  <details class="how" id="how">
+    <summary>Wie kommen die Angaben der Eltern hierher?</summary>
+
+    <p><strong>Aus der Nachricht, die die Eltern schicken.</strong> Ganz unten in dieser
+    Nachricht steht die Zeile «Für die Delegierten zum Übernehmen:» und darunter ein Link.
+    Diesen Link antippen: dann öffnet sich diese Seite und zeigt zuerst, was dazukommt.
+    Gespeichert wird erst, wenn Sie bestätigen.</p>
+
+    <p><strong>Immer auf demselben Gerät.</strong> Die Angaben liegen in diesem Browser,
+    nicht auf einem Server. Was Sie auf dem Handy übernehmen, ist auf dem Laptop nicht
+    vorhanden. Wählen Sie darum ein Gerät für die ganze Klasse und speichern Sie diese Seite
+    dort als Favorit. Eine Nachricht, die auf dem anderen Gerät angekommen ist, leiten Sie
+    sich selber weiter — über WhatsApp Web oder als E-Mail an sich selbst.</p>
+
+    <p><strong>Wenn der Link nicht funktioniert.</strong> WhatsApp kürzt lange Nachrichten
+    manchmal ab. Über dem Link steht alles noch einmal lesbar: dann «Familie von Hand
+    erfassen» und abtippen. Dasselbe gilt für Zettel, die auf Papier zurückkommen.</p>
+
+    <p><strong>Dieselbe Familie zweimal.</strong> Kein Problem: gleiche E-Mail oder gleiche
+    Nummer werden zusammengeführt, und Sie sehen vor dem Übernehmen, was sich ändert.</p>
+  </details>
 
   <div id="families"></div>
 </section>
