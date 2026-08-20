@@ -4,6 +4,29 @@ Read this before writing anything. For everything else, start at
 [`docs/todo.md`](docs/todo.md), which says what is left to build and carries the other
 project invariants.
 
+## GitHub account
+
+This project lives on the **personal** account `mrpia` — repository
+`mrpia/bungi-eltern`, commits authored as `pa.galiana@gmail.com`. **Never** the
+work-adjacent `mrpiaatwork`, and never the work email.
+
+A school parents' council project should not hang off an account tied to employment, and a
+public repository stamps the commit address into a permanent history that cannot be tidied
+up afterwards.
+
+The repo-local git identity is already set, so it overrides the global config. Check both
+before committing or pushing:
+
+```
+git config user.email      # must print pa.galiana@gmail.com
+gh api user --jq .login    # must print mrpia
+```
+
+If the active account is wrong: `gh auth switch --user mrpia`. Git credentials follow the
+*active* gh account, so **push before switching away**, or the push fails with a 403.
+That trap and the missing `workflow` scope are written up in
+[`docs/hosting.md`](docs/hosting.md).
+
 ## The language rule
 
 **English for everything a developer reads. German for everything a parent or a delegate
