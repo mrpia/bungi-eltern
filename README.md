@@ -11,6 +11,7 @@ Die Daten einer Klasse verlassen den Rechner der Delegierten nicht.
 
 - [`docs/anforderungen.md`](docs/anforderungen.md) — Anforderungen, Stand 2026-08-20
 - [`docs/technik.md`](docs/technik.md) — technische Entscheide und Begründungen
+- [`docs/werkstatt.md`](docs/werkstatt.md) — Umsetzungsspezifikation für `/w/`
 - [`docs/escola-abklaerung.md`](docs/escola-abklaerung.md) — was Escola bereits kann
 
 ## Stand

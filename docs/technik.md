@@ -47,6 +47,10 @@ auf `file://` behandelt Chrome den Origin als opaque, das ist unzuverlässig.
 File System Access API wo vorhanden (Chrome/Edge: echtes Speichern an Ort), sonst
 Download-Fallback.
 
+> **Überstimmt am 20.08.2026:** kein File System Access API. Es gibt es nur in Chrome und
+> Edge, und Download plus Datei-Auswahl funktioniert überall gleich, auch auf dem Handy.
+> Siehe `docs/werkstatt.md`, Abschnitt Speicherung — das ist die neuere Entscheidung.
+
 ## PDF: Druck-CSS statt PDF-Bibliothek
 
 `@media print` plus "Als PDF speichern" des Browsers. Bessere Typografie als jede
