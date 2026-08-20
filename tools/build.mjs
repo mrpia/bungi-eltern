@@ -141,9 +141,23 @@ await write('merkblatt/index.html', vorbereiten(await readFile(join(SRC, 'kit/me
 // go live now and the printed URLs are never dead.
 await write('start/index.html', stub('Start für Klassendelegierte', 'für neu gewählte Klassendelegierte'));
 await write('w/index.html', stub('Werkstatt', 'für die Klassendelegierten zum Erfassen der Angaben'));
+
+// The parent form: one page per class. The class is written into <meta> tags rather than a
+// query string, so the page needs no inline script and its CSP can stay script-src 'self'.
+// Only the shared assets go to /assets/f/; index.html is a template, not a served page.
+for (const datei of ['formular.css', 'formular.js']) {
+  await write(join('assets/f', datei), absolutise(await readFile(join(SRC, 'f', datei), 'utf8')));
+}
+const formularVorlage = await readFile(join(SRC, 'f/index.html'), 'utf8');
 for (const k of klassen) {
-  await write(`f/${k.parsed.slug}/index.html`,
-    stub(`Kontaktangaben ${k.parsed.display}`, `für die Eltern der ${k.parsed.display}`));
+  const seite = formularVorlage
+    .replace('<meta name="kk-klasse" content="Klasse 3a">', `<meta name="kk-klasse" content="${k.parsed.display}">`)
+    .replace('<meta name="kk-slug" content="3a">', `<meta name="kk-slug" content="${k.parsed.slug}">`)
+    .replace('<meta name="kk-jahr" content="2026/27">', `<meta name="kk-jahr" content="${cfg.schuljahr}">`)
+    .replace('<meta name="kk-schule" content="Schule Bungertwies">', `<meta name="kk-schule" content="${cfg.schule}">`)
+    .replace('<meta name="kk-merkblatt" content="2026-08-1">', `<meta name="kk-merkblatt" content="${cfg.merkblattVersion}">`)
+    .replace('<meta name="kk-basis" content="https://bungi-eltern.mrpia.ch">', `<meta name="kk-basis" content="${cfg.basis}">`);
+  await write(`f/${k.parsed.slug}/index.html`, seite);
 }
 
 // Landing page.

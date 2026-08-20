@@ -1,0 +1,215 @@
+<!--
+  Elternformular. Eine Seite pro Klasse, vom Build erzeugt (/f/3a/, /f/kiga1/ ...).
+
+  Content-Security-Policy ist hier der Kern, nicht Zierde. Ohne connect-src kann der
+  Browser von dieser Seite aus keinen fetch, kein XHR, kein WebSocket und kein sendBeacon
+  ausführen: die Seite *kann* die eingegebenen Daten nirgendwohin senden, auch wenn sie
+  wollte. Deshalb liegen Skript und Stil in eigenen Dateien und alle Werte in <meta>-Tags —
+  so genügt script-src 'self' ohne 'unsafe-inline', und die Regel ist in einer Zeile prüfbar.
+
+  Die Angaben verlassen das Gerät nur, wenn die Eltern selber auf WhatsApp oder E-Mail
+  tippen. Das ist eine Navigation, keine Übertragung durch diese Seite.
+-->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; form-action 'none'; base-uri 'none'">
+<link rel="icon" href="/favicon.svg">
+<link rel="stylesheet" href="/assets/f/formular.css">
+<title>Kontaktangaben</title>
+
+<meta name="kk-klasse" content="Klasse 3a">
+<meta name="kk-slug" content="3a">
+<meta name="kk-jahr" content="2026/27">
+<meta name="kk-schule" content="Schule Bungertwies">
+<meta name="kk-merkblatt" content="2026-08-1">
+<meta name="kk-basis" content="https://bungi-eltern.mrpia.ch">
+
+<body>
+<h1 data-en="Class contact details">Kontaktangaben für die Klasse</h1>
+<div class="kopf">
+  <span><span id="kopf-klasse">Klasse 3a</span> · <span id="kopf-jahr">2026/27</span> ·
+    Elternrat <span id="kopf-schule">Schule Bungertwies</span></span>
+  <button type="button" class="sprache" id="sprache">English</button>
+</div>
+
+<p class="einleitung" data-en="Two elected class delegates pass on the parents' council's
+  minutes and requests, and raise questions from the class. They need a way to reach you.
+  A class contact list and a WhatsApp group are possible on top of that, but entirely
+  voluntary. Required are only your child's name and one way to contact you.">
+  Zwei gewählte Delegierte leiten Protokolle und Aufrufe des Elternrats weiter und bringen
+  Anliegen aus der Klasse ein. Dafür brauchen sie einen Weg, Sie zu erreichen. Eine
+  Klassenliste und eine WhatsApp-Gruppe sind zusätzlich möglich, aber freiwillig. Pflicht
+  sind nur der Name des Kindes und eine Kontaktmöglichkeit.
+</p>
+
+<div class="fehler versteckt" id="fehler" role="alert"></div>
+
+<form id="formular" novalidate>
+  <fieldset>
+    <legend data-en="Child">Kind</legend>
+    <div class="paar">
+      <label>
+        <span class="feldname" data-en="First name *">Vorname <span class="pflicht">*</span></span>
+        <input type="text" id="kind-vorname" autocomplete="off" enterkeyhint="next">
+      </label>
+      <label>
+        <span class="feldname" data-en="Surname">Nachname</span>
+        <input type="text" id="kind-nachname" autocomplete="off">
+      </label>
+    </div>
+  </fieldset>
+
+  <fieldset id="person1">
+    <legend data-en="You">Sie</legend>
+    <p class="legende-hinweis" data-en="One of email or mobile is enough.">
+      E-Mail oder Mobilnummer — eines von beiden genügt.
+    </p>
+    <div class="paar">
+      <label>
+        <span class="feldname" data-en="First name *">Vorname <span class="pflicht">*</span></span>
+        <input type="text" data-rolle="vorname" autocomplete="given-name">
+      </label>
+      <label>
+        <span class="feldname" data-en="Surname">Nachname</span>
+        <input type="text" data-rolle="nachname" autocomplete="family-name">
+      </label>
+    </div>
+    <label>
+      <span class="feldname" data-en="I am">Ich bin</span>
+      <select data-rolle="rolle">
+        <option value="Mutter" data-en="Mother">Mutter</option>
+        <option value="Vater" data-en="Father">Vater</option>
+        <option value="andere Bezugsperson" data-en="other carer">andere Bezugsperson</option>
+      </select>
+    </label>
+    <label>
+      <span class="feldname" data-en="Email">E-Mail</span>
+      <input type="email" data-rolle="email" autocomplete="email" inputmode="email"
+             spellcheck="false" autocapitalize="off">
+      <p class="hinweis versteckt" data-hinweis="email"></p>
+    </label>
+    <label>
+      <span class="feldname" data-en="Mobile">Mobilnummer</span>
+      <input type="tel" data-rolle="mobil" autocomplete="tel" inputmode="tel">
+      <p class="hinweis versteckt" data-hinweis="mobil"></p>
+    </label>
+    <button type="button" class="mehr" data-adresse-knopf
+            data-en="+ Add address (voluntary)">+ Adresse angeben (freiwillig)</button>
+    <div data-adresse class="versteckt">
+      <label>
+        <span class="feldname" data-en="Street and number">Strasse und Nummer</span>
+        <input type="text" data-rolle="strasse" autocomplete="street-address">
+      </label>
+      <div class="paar">
+        <label class="schmal">
+          <span class="feldname" data-en="Postcode">PLZ</span>
+          <input type="text" data-rolle="plz" autocomplete="postal-code" inputmode="numeric">
+        </label>
+        <label>
+          <span class="feldname" data-en="Town">Ort</span>
+          <input type="text" data-rolle="ort" autocomplete="address-level2">
+        </label>
+      </div>
+    </div>
+  </fieldset>
+
+  <button type="button" class="mehr" id="person2-knopf"
+          data-en="+ Add a second parent or carer">+ Zweite Person hinzufügen</button>
+
+  <fieldset id="person2" class="versteckt">
+    <legend data-en="Second parent or carer">Zweite Person</legend>
+    <div class="paar">
+      <label>
+        <span class="feldname" data-en="First name">Vorname</span>
+        <input type="text" data-rolle="vorname" autocomplete="off">
+      </label>
+      <label>
+        <span class="feldname" data-en="Surname">Nachname</span>
+        <input type="text" data-rolle="nachname" autocomplete="off">
+      </label>
+    </div>
+    <label>
+      <span class="feldname" data-en="This person is">Diese Person ist</span>
+      <select data-rolle="rolle">
+        <option value="Vater" data-en="Father">Vater</option>
+        <option value="Mutter" data-en="Mother">Mutter</option>
+        <option value="andere Bezugsperson" data-en="other carer">andere Bezugsperson</option>
+      </select>
+    </label>
+    <label>
+      <span class="feldname" data-en="Email">E-Mail</span>
+      <input type="email" data-rolle="email" inputmode="email" spellcheck="false" autocapitalize="off">
+      <p class="hinweis versteckt" data-hinweis="email"></p>
+    </label>
+    <label>
+      <span class="feldname" data-en="Mobile">Mobilnummer</span>
+      <input type="tel" data-rolle="mobil" inputmode="tel">
+      <p class="hinweis versteckt" data-hinweis="mobil"></p>
+    </label>
+    <button type="button" class="mehr" data-adresse-knopf
+            data-en="+ Add address (voluntary)">+ Adresse angeben (freiwillig)</button>
+    <div data-adresse class="versteckt">
+      <label>
+        <span class="feldname" data-en="Street and number">Strasse und Nummer</span>
+        <input type="text" data-rolle="strasse">
+      </label>
+      <div class="paar">
+        <label class="schmal">
+          <span class="feldname" data-en="Postcode">PLZ</span>
+          <input type="text" data-rolle="plz" inputmode="numeric">
+        </label>
+        <label>
+          <span class="feldname" data-en="Town">Ort</span>
+          <input type="text" data-rolle="ort">
+        </label>
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend data-en="Voluntary">Freiwillig</legend>
+    <div class="zustimmung">
+      <label>
+        <input type="checkbox" id="zust-liste">
+        <span data-en="Yes, my details may go on the contact list for this class, which all
+          parents of the class receive.">Ja, meine Angaben dürfen in die Kontaktliste dieser
+          Klasse aufgenommen werden, die alle Eltern der Klasse erhalten.</span>
+      </label>
+      <label>
+        <input type="checkbox" id="zust-whatsapp">
+        <span data-en="Yes, add me to the class WhatsApp group.">Ja, ich möchte in die
+          WhatsApp-Gruppe der Klasse.
+          <span class="klein" data-en="Everyone in the group can see your number.">Alle
+            Mitglieder der Gruppe sehen dort Ihre Nummer.</span></span>
+      </label>
+    </div>
+  </fieldset>
+
+  <button type="button" class="knopf" id="weiter"
+          data-en="Check my details">Weiter: Angaben prüfen</button>
+</form>
+
+<section id="pruefen-bereich" class="versteckt">
+  <h2 class="pruefen-titel" data-en="This is what you will send">Das senden Sie</h2>
+  <div class="fehler versteckt" id="offene-warnungen" role="status"></div>
+  <div class="pruefen"><pre id="zusammenfassung"></pre></div>
+  <button type="button" class="knopf" id="senden-whatsapp"
+          data-en="Send via WhatsApp">Per WhatsApp senden</button>
+  <button type="button" class="knopf zweit" id="senden-mail"
+          data-en="Send by email">Per E-Mail senden</button>
+  <button type="button" class="knopf zweit" id="zurueck"
+          data-en="Back, I want to change something">Zurück, ich möchte etwas ändern</button>
+  <p class="hinweis" id="empfaenger-hinweis"></p>
+</section>
+
+<p class="fuss" data-en="This page stores nothing and sends nothing. It prepares a message
+  that you send yourself, to the delegates of your class. Details:">
+  Diese Seite speichert nichts und sendet nichts. Sie stellt eine Nachricht zusammen, die
+  Sie selber abschicken — an die Delegierten Ihrer Klasse. Einzelheiten im
+  <a href="/merkblatt/">Merkblatt</a>.
+</p>
+
+<script type="module" src="/assets/f/formular.js"></script>
+</body>
