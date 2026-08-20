@@ -4,8 +4,3 @@
 node_modules/
 .DS_Store
 *.log
-
-# Internal correspondence stays out of a public repo. The draft letter to the school
-# director is parents'-council business, not something to publish next to the code.
-# Keep it in the Obsidian vault instead, where it is backed up and private.
-/docs/anfrage-schulleitung.de.md

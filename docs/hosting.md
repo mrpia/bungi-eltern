@@ -13,9 +13,8 @@ There is no build step to see through and no bundle to unpick.
 No personal data is ever in the repository. The class datasets live in the delegates'
 browsers, and the repository holds only code, wording and the class list.
 
-The draft letter to the school director is git-ignored. It is parents'-council
-correspondence and does not belong next to public code — keep it in the Obsidian vault,
-where it is private and backed up.
+Internal correspondence of the parents' council does not belong in this repository.
+Drafts of letters to the school or the city are kept privately, outside the code.
 
 ## Which GitHub account
 
