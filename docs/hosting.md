@@ -43,7 +43,15 @@ stellt GitHub das Zertifikat aus und `https_enforced` kann auf `true`.
    gh auth switch --user mrpia
    ```
    Afterwards, switch back with `gh auth switch --user mrpiaatwork` so day-to-day work is
-   unaffected.
+   unaffected. **Push as `mrpia` before switching back** — git credentials follow the
+   active account, so a push made after switching gets a 403.
+
+   The freshly authenticated account will lack the `workflow` scope, and GitHub refuses to
+   let a token without it push anything under `.github/workflows/`. Add it once:
+   ```
+   gh auth refresh -h github.com -s workflow
+   ```
+   `gh auth switch` does not change scopes, only which account is active.
 2. **Create the repository and push:**
    ```
    gh repo create mrpia/bungi-eltern --public --source=. --push
