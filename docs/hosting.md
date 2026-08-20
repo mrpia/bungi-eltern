@@ -23,16 +23,17 @@ parents' council project should not hang off an account tied to employment, and 
 identity is set per-repository to `pa.galiana@gmail.com` so the work address never appears
 in a public history.
 
-## Stand 2026-08-20
+## State as of 2026-08-20
 
-Erledigt: Repository `mrpia/bungi-eltern` (öffentlich), erster Push, Pages auf
-`build_type=workflow`, erster Deploy erfolgreich, Custom Domain
-`bungi-eltern.mrpia.ch` eingetragen. `https://mrpia.github.io/bungi-eltern/`
-antwortet mit 301 auf die Custom Domain — das bestätigt, dass die absoluten
-Asset-Pfade für das echte Ziel stimmen.
+Done: repository `mrpia/bungi-eltern` (public), first push, Pages set to
+`build_type=workflow`, first deploy successful, custom domain `bungi-eltern.mrpia.ch`
+registered, DNS CNAME added and resolving, site live over HTTP.
+`https://mrpia.github.io/bungi-eltern/` answers with a 301 to the custom domain, which
+confirms the absolute asset paths are correct for the real target.
 
-Offen, und nur von Pierre-Arnaud zu machen: der DNS-Eintrag (Schritt 4). Danach
-stellt GitHub das Zertifikat aus und `https_enforced` kann auf `true`.
+Open: the HTTPS certificate. GitHub's `/pages/health` endpoint reports
+`is_https_eligible: true` and `caa_error: null`, so the configuration is right and it is
+GitHub's issuance queue. Once it lands, set `https_enforced` to `true`.
 
 ## One-time setup
 
@@ -84,15 +85,15 @@ scannable, so a change that would produce unreadable codes cannot reach the shee
 
 ## Routes
 
-| URL | Was | Stand |
+| URL | What | State |
 |---|---|---|
-| `/` | Landing page, explains that no data lives here | fertig |
-| `/merkblatt/` | Full information notice, linked from every sheet | fertig |
+| `/` | Landing page, explains that no data lives here | done |
+| `/merkblatt/` | Full information notice, linked from every sheet | done |
 | `/kit/` | Internal: per-class links to the printable sheets | interim |
-| `/kit/blatt.html`, `/kit/lehrblatt.html` | The printable sheets | fertig |
-| `/start/` | Delegate self-setup, 60 seconds on a phone | Platzhalter |
-| `/f/<klasse>/` | Parent form, one per class (`/f/3a/`, `/f/kiga1/`) | Platzhalter |
-| `/w/` | Delegate workbench | Platzhalter |
+| `/kit/blatt.html`, `/kit/lehrblatt.html` | The printable sheets | done |
+| `/start/` | Delegate self-setup, 60 seconds on a phone | placeholder |
+| `/f/<class>/` | Parent form, one per class (`/f/3a/`, `/f/kiga1/`) | done |
+| `/w/` | Delegate workbench | placeholder |
 
 The placeholders are deliberate. They say the page is being built and give a contact
 address, so the domain and the certificate can go live now while the pages are written,

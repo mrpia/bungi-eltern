@@ -113,7 +113,7 @@ const klassen = cfg.klassen
   .sort((a, b) => compareClasses(a.parsed, b.parsed));
 
 const bad = klassen.filter((k) => !k.parsed.ok);
-if (bad.length) throw new Error(`Unlesbare Klassennamen: ${bad.map((k) => k.name).join(', ')}`);
+if (bad.length) throw new Error(`unreadable class names: ${bad.map((k) => k.name).join(', ')}`);
 
 // Host plumbing. .nojekyll matters: without it GitHub Pages hides files starting with _.
 await write('CNAME', new URL(cfg.basis).hostname + '\n');
@@ -201,5 +201,5 @@ ${klassen.map((k) => {
 </table>`));
 
 const count = (await readdir(OUT, { recursive: true })).length;
-console.log(`site/ gebaut: ${count} Einträge, ${klassen.length} Klassen`);
-console.log('Klassen in Reihenfolge:', klassen.map((k) => k.parsed.display).join(', '));
+console.log(`site/ built: ${count} entries, ${klassen.length} classes`);
+console.log('classes in order:', klassen.map((k) => k.parsed.display).join(', '));

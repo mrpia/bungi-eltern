@@ -42,7 +42,7 @@ class parents' evening, plus contacts delegates already hold.
 - Runs on any OS in a normal browser. Hosted as static files on a subdomain of
   `mrpia.ch`, plus a single-file offline copy.
 - The president must not be able to read class data. Enforced structurally, not by
-  promise (see `docs/technik.md`, CSP).
+  promise (see `docs/technical-decisions.md`, CSP).
 - **One owner per class.** Two delegates exist, but only one holds the dataset. No sync,
   no key sharing, no encrypted project exchange. This removed a large chunk of v1.
 
@@ -122,7 +122,7 @@ is therefore reversible and blocks nothing.
    family, no channel, no accounts, nothing leaves the room.
 3. **Send to delegate** — prefilled WhatsApp or email for parents not present, bulk
    paste into the workbench.
-4. **Escola survey export** — if the director allows it. See `docs/escola-abklaerung.md`.
+4. **Escola survey export** — if the director allows it. See `docs/escola-research.md`.
 
 ## Cut from v1
 
@@ -277,11 +277,11 @@ per family, 580 sheets for the school.
 
 ## Three documents instead of one
 
-| Datei | Auflage | Inhalt |
+| File | Copies | Contents |
 |---|---|---|
-| `src/kit/blatt.html` | 1 pro Familie (~290) | Kurzinfo, Wege (QR/Papier), Formular, Einwilligung |
-| `src/kit/lehrblatt.html` | 1 pro Klasse (13) | Anleitung für die Lehrperson, Vorlesetext, 2 Delegierten-Zettel |
-| `src/kit/merkblatt.html` | 1 pro Klasse + online | Vollständige Datenschutzinformation |
+| `src/kit/blatt.html` | 1 per family (~290) | short intro, routes (QR/paper), form, consent |
+| `src/kit/lehrblatt.html` | 1 per class (13) | instructions for the teacher, a paragraph to read aloud, 2 delegate slips |
+| `src/kit/merkblatt.html` | 1 per class + online | the full information notice |
 
 Two things moved deliberately:
 
@@ -297,7 +297,7 @@ Two things moved deliberately:
 `src/kit/_messen.html` is a dev-only harness that loads each sheet in an iframe and reports
 content height against the page box. Rerun it after every text edit.
 
-| Blatt | Inhalt | Druckbar | Reserve |
+| Sheet | Content | Printable | Spare |
 |---|---|---|---|
 | blatt.html | 225.1 mm | 269 mm | 43.9 mm |
 | lehrblatt.html | 228.1 mm | 269 mm | 40.9 mm |
@@ -330,7 +330,7 @@ consent points at text that no longer exists.
 
 ## Decided
 
-- School: **Schule Bungertwies**, Zürich (Kindergartenstufe und Primarstufe, per the
+- School: **Schule Bungertwies**, Zürich (Kindergartenstufe and Primarstufe, per the
   city's own page — matches the KiGa-plus-Klassen structure).
 - Base URL: **https://bungi-eltern.mrpia.ch**. Printed links show the host without the
   scheme; the QR encodes the full URL.
@@ -372,11 +372,11 @@ to push the code to a denser version, a test fails instead of 290 sheets being u
 
 ## Measured after all changes
 
-| Blatt | Inhalt | Druckbar | Reserve | QR |
+| Sheet | Content | Printable | Spare | QR |
 |---|---|---|---|---|
-| blatt.html | 231.1 mm | 269 mm | 37.9 mm | v3, 18.8 mm code in a 24 mm box, 0.65 mm/Modul |
-| lehrblatt.html | 228.1 mm | 269 mm | 40.9 mm | 2 × dito |
-| merkblatt.html | 246.7 mm | 267 mm | 20.3 mm | keiner |
+| blatt.html | 231.1 mm | 269 mm | 37.9 mm | v3, 18.8 mm code in a 24 mm box, 0.65 mm per module |
+| lehrblatt.html | 228.1 mm | 269 mm | 40.9 mm | 2 × same |
+| merkblatt.html | 246.7 mm | 267 mm | 20.3 mm | none |
 
 ## Left for the print run
 
@@ -387,13 +387,14 @@ The 13-class batch generator. Everything it needs now exists.
 # Revision 2026-08-20, sixth pass: the address moves onto the person
 
 **Decision: no parent-facing text singles out separated parents.** The instruction
-*"getrennt lebende Eltern füllen je ein Formular aus"* is gone. Instead the address is an
+*"getrennt lebende Eltern füllen je ein Formular aus"* ("parents living apart each fill in one form") is gone. Instead the address is an
 optional field **on each person**. Two people at the same address write it once or twice as
 they like; two people at different addresses simply write different ones. Nothing on the
 form asks why, and nobody is put in the spotlight.
 
 The form now states what is required, positively: *"Pflicht sind nur der Name des Kindes
-und eine Kontaktmöglichkeit."* A form filled in by one parent alone is therefore complete,
+und eine Kontaktmöglichkeit"* — only the child's name and one way to get in touch. A form
+filled in by one parent alone is therefore complete,
 which removes the last reason a special instruction would have existed.
 
 ## Consequence: Household stops being a declared entity
@@ -424,7 +425,7 @@ the paper asking for it. Belongs to the data-model task, with tests.
 
 ## Measured after the change
 
-| Blatt | Inhalt | Druckbar | Reserve |
+| Sheet | Content | Printable | Spare |
 |---|---|---|---|
 | blatt.html | 239.2 mm | 269 mm | 29.8 mm |
 | lehrblatt.html | 228.1 mm | 269 mm | 40.9 mm |
