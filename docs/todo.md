@@ -26,6 +26,19 @@ which is why none of the below is worth rushing into a shape that has to be undo
 
 ---
 
+## 0 — Take the "Testbetrieb" banner down
+
+Every published page currently carries a work-in-progress notice, because the site is live
+and being tried out before anyone has agreed to use it. It is one edit to remove: set
+`wipNotice` to `""` in `site.config.json` and rebuild. The `.wip` rules at the bottom of
+`src/f/form.css` and `src/w/workbench.css` go at the same time.
+
+Listed as item 0 because a temporary banner with nobody assigned to remove it is a
+permanent banner.
+
+**Done when:** the notice is gone from all 20 published pages, and going live is a decision
+somebody actually made.
+
 ## 1 — The six outputs
 
 Needed within a week or two *after* the parents' evening, not before it, because data has to

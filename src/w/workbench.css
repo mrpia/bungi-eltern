@@ -232,3 +232,15 @@ legend { font-weight: 600; font-size: 1rem; padding: 0; margin-bottom: .1rem; }
 .footer { color: var(--muted); font-size: .82rem; margin-top: 2.5rem; }
 
 .box.pre { white-space: pre-line; }
+
+/* Temporary: the work-in-progress banner the build puts on every published page. This page
+   is under style-src 'self', so it cannot take the inline <style> the other pages get.
+   Remove together with `wipNotice` in site.config.json. */
+.wip {
+  background: var(--warn-surface); color: var(--warn);
+  border: 1px solid var(--warn-line, var(--warn)); border-radius: 8px;
+  padding: .55rem .75rem; margin: 0 0 1.1rem; font-size: .85rem; line-height: 1.45;
+}
+.wip strong { display: block; }
+.wip a { color: inherit; }
+@media print { .wip { display: none; } }

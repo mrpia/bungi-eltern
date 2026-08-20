@@ -58,12 +58,62 @@ const hash = (text) => createHash('sha256').update(text).digest('hex').slice(0, 
  * "Klasse 3a" — with a green build and a passing test suite. A silent no-op is the wrong
  * primitive for a build invariant.
  */
+const escapeAttr = (value) => String(value)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
 function setMeta(text, name, value) {
   const tag = new RegExp(`(<meta name="kk-${name}" content=")[^"]*(">)`);
   if (!tag.test(text)) throw new Error(`no <meta name="kk-${name}"> in the template to fill`);
-  const safe = String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  return text.replace(tag, (whole, open, close) => `${open}${safe}${close}`);
+  return text.replace(tag, (whole, open, close) => `${open}${escapeAttr(value)}${close}`);
+}
+
+// ---------------------------------------------------------------- work-in-progress notice
+
+/**
+ * A banner on every published page while the tool is being tried out on the live site.
+ *
+ * Set `wipNotice` to "" in site.config.json to remove it from every page at once. That is
+ * the entire switch, deliberately: a temporary thing should be one edit to undo, not a
+ * hunt through thirteen generated pages.
+ *
+ * Hidden in print. The Merkblatt and the two sheets are each measured to fill exactly one
+ * A4, and a banner would push them onto a second page — and a parent scanning the QR code
+ * on a printed sheet lands on a page that carries the notice anyway.
+ *
+ * The three pieces each carry their own `data-en`, in plain text, because the parent form
+ * translates every `[data-en]` element it finds and markup inside that attribute would be
+ * the only such case in the project. Pages without the toggle just ignore the attribute.
+ */
+const WIP_CSS = `
+  .wip { background: #fff4d6; color: #6b4b00; border: 1px solid #d9a13c;
+         border-radius: 8px; padding: .55rem .75rem; margin: 0 0 1.1rem;
+         font: .85rem/1.45 -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  .wip strong { display: block; }
+  .wip a { color: inherit; }
+  @media (prefers-color-scheme: dark) {
+    .wip { background: #2a2011; color: #f0b95c; border-color: #7a5c1e; }
+  }
+  @media print { .wip { display: none; } }`;
+
+const wipBanner = () => (cfg.wipNotice
+  ? '<div class="wip">'
+    + '<strong data-en="Trial run — not in use yet">Testbetrieb — noch nicht in Gebrauch</strong>'
+    + `<span data-en="${escapeAttr(cfg.wipNoticeEn)}">${cfg.wipNotice}</span> `
+    + `<a href="mailto:${cfg.contact}">${cfg.contact}</a>`
+    + '</div>'
+  : '');
+
+/**
+ * @param {boolean} styled whether to carry the CSS inline. False for /f/ and /w/, whose
+ *   `style-src 'self'` forbids an inline <style> block — their own stylesheets hold the
+ *   rule instead, marked as temporary in both.
+ */
+function withWip(html, { styled }) {
+  const banner = wipBanner();
+  if (!banner) return html;
+  if (!html.includes('<body>')) throw new Error('no <body> to put the notice after');
+  return html.replace('<body>',
+    `${styled ? `<style>${WIP_CSS}\n</style>\n` : ''}<body>\n${banner}`);
 }
 
 // ---------------------------------------------------------------- assets
@@ -90,10 +140,18 @@ const assets = new Map();     // URL → source, its own imports already absolut
 const hashes = new Map();     // URL → content hash
 const emitted = new Map();    // URL → text as written, imports carrying their hashes
 
-/** Read a source directory into the asset registry; anything not code is copied verbatim. */
+/**
+ * Read a source directory into the asset registry; anything not code is copied verbatim.
+ *
+ * HTML is the exception, and skipping it is load-bearing rather than tidiness: `src/f/` and
+ * `src/w/` hold a page *template* next to their assets, and copying it here published it at
+ * `/assets/f/index.html` — a form still carrying the template's placeholder class, telling
+ * whoever found it they were filling in Klasse 3a. /assets/ serves assets, never pages.
+ */
 async function stage(fromRel, toRel) {
   for (const file of await readdir(join(SRC, fromRel))) {
     if (file.startsWith('_')) continue;                   // dev-only helpers stay out
+    if (file.endsWith('.html')) continue;                 // a page, built elsewhere
     const body = await readFile(join(SRC, fromRel, file), 'utf8');
     if (/\.(m?js|css)$/.test(file)) {
       assets.set(`/${toRel}/${file}`, absolutise(body, basename(toRel)));
@@ -183,7 +241,10 @@ const shell = (title, body, extraHead = '') => `<meta charset="utf-8">
   code { font-family: Consolas, Menlo, monospace; font-size: .9em; }
 </style>
 ${extraHead}
+<style>${WIP_CSS}
+</style>
 <body>
+${wipBanner()}
 ${body}
 <p class="footer">Elternrat ${cfg.school} · Schuljahr ${cfg.schoolYear} ·
   <a href="/merkblatt/">Merkblatt</a> · ${cfg.contact}</p>
@@ -232,7 +293,8 @@ const siteValues = {
   kontakt: cfg.contact,
   version: cfg.noticeVersion,
 };
-const prepare = (text) => linkAssets(fillDefaults(absolutise(text), siteValues));
+const prepare = (text) =>
+  withWip(linkAssets(fillDefaults(absolutise(text), siteValues)), { styled: true });
 
 await copyDir('kit', 'kit', prepare, ['notice.html']);
 await write('merkblatt/index.html', prepare(await readFile(join(SRC, 'kit/notice.html'), 'utf8')));
@@ -244,7 +306,8 @@ await write('start/index.html', stub('Start für Klassendelegierte', 'für neu g
 // The parent form: one page per class. The class is written into <meta> tags rather than a
 // query string, so the page needs no inline script and its CSP can stay script-src 'self'.
 // Only the shared assets go to /assets/f/; index.html is a template, not a served page.
-const formTemplate = linkAssets(await readFile(join(SRC, 'f/index.html'), 'utf8'));
+const formTemplate = withWip(
+  linkAssets(await readFile(join(SRC, 'f/index.html'), 'utf8')), { styled: false });
 for (const c of classes) {
   let page = formTemplate;
   page = setMeta(page, 'class', c.parsed.display);
@@ -262,7 +325,8 @@ for (const c of classes) {
 for (const c of classes) {
   if (/[|:]/.test(c.parsed.display)) throw new Error(`class name breaks the meta list: ${c.name}`);
 }
-let workbench = linkAssets(await readFile(join(SRC, 'w/index.html'), 'utf8'));
+let workbench = withWip(
+  linkAssets(await readFile(join(SRC, 'w/index.html'), 'utf8')), { styled: false });
 workbench = setMeta(workbench, 'year', cfg.schoolYear);
 workbench = setMeta(workbench, 'school', cfg.school);
 workbench = setMeta(workbench, 'notice', cfg.noticeVersion);
