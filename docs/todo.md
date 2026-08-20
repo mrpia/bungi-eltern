@@ -15,8 +15,8 @@ first days of September.
 - Three printable sheets, each measured to fit one A4: family sheet, teacher sheet,
   information notice (Merkblatt).
 - Parent form at `/f/<class>/` for all 13 classes, German with an English toggle.
-- Hosting: `mrpia/bungi-eltern` on GitHub Pages, live at `bungi-eltern.mrpia.ch`, deploy
-  gated on `npm test`.
+- Hosting: `mrpia/bungi-eltern` on GitHub Pages, live at
+  <https://bungi-eltern.mrpia.ch> over HTTPS, deploy gated on `npm test`.
 
 ---
 
@@ -111,9 +111,8 @@ Keep only as a later convenience for a delegate sitting at a computer.
   contact data, which shrinks the dataset to opt-in families only. A yes to the fourth
   question — whether the city's «Meine Kinder» service or Escola will cover this anyway —
   could make most of this tool unnecessary. Worth knowing before item 2 gets built.
-- **HTTPS certificate** for `bungi-eltern.mrpia.ch`. DNS is correct and GitHub reports
-  `is_https_eligible: true` with `caa_error: null`, so it is their issuance queue. When it
-  lands, set `https_enforced` to `true`.
+*(The HTTPS certificate landed on 2026-08-20 and enforcement is on. See the ordering trap
+in [`docs/hosting.md`](hosting.md) if a second subdomain is ever set up.)*
 
 ## Ground rules worth not rediscovering
 

@@ -31,9 +31,40 @@ registered, DNS CNAME added and resolving, site live over HTTP.
 `https://mrpia.github.io/bungi-eltern/` answers with a 301 to the custom domain, which
 confirms the absolute asset paths are correct for the real target.
 
-Open: the HTTPS certificate. GitHub's `/pages/health` endpoint reports
-`is_https_eligible: true` and `caa_error: null`, so the configuration is right and it is
-GitHub's issuance queue. Once it lands, set `https_enforced` to `true`.
+HTTPS is live: Let's Encrypt certificate for `bungi-eltern.mrpia.ch`, issued
+2026-08-20 11:46 UTC, `https_enforced` set to `true`. All routes answer over HTTPS.
+
+## The ordering trap that cost two hours
+
+**Do not set the custom domain before the DNS record resolves.**
+
+The custom domain was registered via the API while `bungi-eltern.mrpia.ch` did not yet
+resolve. GitHub attempted verification, failed against a hostname that did not exist, and
+**never retried**. DNS was then correct for two hours with nothing happening, while
+`/pages/health` cheerfully reported `is_https_eligible: true` and `caa_error: null` — the
+configuration really was fine, the request had simply died and nobody was going to reissue it.
+
+The remedy is to re-assert the domain so a fresh request runs against working DNS:
+
+```
+gh api -X PUT repos/OWNER/REPO/pages -f cname=""                      # remove
+gh api -X PUT repos/OWNER/REPO/pages -f cname=host.example.ch         # add back
+```
+
+The certificate arrived about one minute later. The site never went down during the gap,
+because the `CNAME` file in the deployed artifact keeps serving the domain while the
+API-level setting is empty.
+
+Two further details worth knowing:
+
+- `/pages/health` **caches**. It still reported `peer_failed_verification` after the
+  certificate was live. The live TLS handshake is the ground truth:
+  `echo | openssl s_client -servername HOST -connect HOST:443 | openssl x509 -noout -subject`
+- `https_enforced` needs a **typed boolean**. `gh api -f https_enforced=true` sends a string
+  and returns 422; use `-F https_enforced=true`.
+- The HTTP-to-HTTPS redirect appears at GitHub's edge on its own schedule, some minutes
+  later. It is not load-bearing here: every printed link and QR code encodes `https://`
+  directly.
 
 ## One-time setup
 
