@@ -1,0 +1,23 @@
+{
+  "schule": "Schule Bungertwies",
+  "schuljahr": "2026/27",
+  "basis": "https://bungi-eltern.mrpia.ch",
+  "kontakt": "pa.galiana@gmail.com",
+  "merkblattVersion": "2026-08-1",
+  "_klassenHinweis": "TODO Pierre-Arnaud: bitte bestätigen. Geraten: 13 Klassen, a/b-Teilung nicht überall.",
+  "klassen": [
+    { "name": "KiGa 1", "anzahl": 22 },
+    { "name": "KiGa 2", "anzahl": 22 },
+    { "name": "KiGa 3", "anzahl": 22 },
+    { "name": "Klasse 1a", "anzahl": 22 },
+    { "name": "Klasse 1b", "anzahl": 22 },
+    { "name": "Klasse 2a", "anzahl": 22 },
+    { "name": "Klasse 2b", "anzahl": 22 },
+    { "name": "Klasse 3a", "anzahl": 22 },
+    { "name": "Klasse 3b", "anzahl": 22 },
+    { "name": "Klasse 4a", "anzahl": 22 },
+    { "name": "Klasse 4b", "anzahl": 22 },
+    { "name": "Klasse 5", "anzahl": 22 },
+    { "name": "Klasse 6", "anzahl": 22 }
+  ]
+}

@@ -1,0 +1,223 @@
+<!--
+  Elternblatt: one compact A4 per family, handed out by the teacher at the class parents'
+  evening. Upper part is kept, lower part is filled in and handed back.
+
+  Deliberately short. The full information notice is a separate document (merkblatt.html),
+  one copy per class plus a link, because a first draft carrying the whole notice measured
+  468 mm against 269 mm of printable A4 — two pages per family, 580 sheets for the school.
+
+    ?klasse=Klasse+3a&jahr=2026/27&schule=Primarschule+Beispiel
+-->
+<meta charset="utf-8">
+<link rel="icon" href="/favicon.svg">
+<title>Elternblatt</title>
+<style>
+  @page { size: A4; margin: 14mm 16mm; }
+
+  :root { --ink: #1a1a1a; --muted: #5a5a5a; --rule: #b8b8b8; --accent: #1f4e79; }
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0 auto;
+    max-width: 178mm;
+    font: 10.5pt/1.4 Georgia, "Times New Roman", serif;
+    color: var(--ink);
+    background: #fff;
+  }
+
+  h1 { font-family: Arial, "Helvetica Neue", sans-serif; font-size: 13.5pt; margin: 0 0 1mm; }
+  .kopf {
+    font-family: Arial, "Helvetica Neue", sans-serif; font-size: 9pt; color: var(--muted);
+    margin-bottom: 3.5mm; padding-bottom: 1.6mm; border-bottom: 1.5pt solid var(--accent);
+  }
+  p { margin: 0 0 2mm; }
+
+  .wege {
+    display: flex; gap: 5mm; align-items: center;
+    border: 0.5pt solid var(--rule); padding: 2.5mm 3.5mm; margin-top: 3mm;
+  }
+  .qr { flex: 0 0 24mm; height: 24mm; border: 0.5pt dashed var(--rule);
+        display: grid; place-items: center; text-align: center;
+        font: 7pt/1.15 Arial, "Helvetica Neue", sans-serif; color: var(--muted); }
+  .wege > div:last-child { font-size: 9.5pt; }
+  .link { font-family: Consolas, Menlo, monospace; font-size: 9pt; word-break: break-all; }
+
+  .schnitt { margin: 5mm 0 4mm; border-top: 0.75pt dashed #888; height: 0; position: relative; }
+  .schnitt::before { content: "✂"; position: absolute; top: -5.5pt; left: 0;
+                     background: #fff; padding-right: 2mm; font-size: 9pt; color: #888; }
+
+  .formular { font-family: Arial, "Helvetica Neue", sans-serif; font-size: 9.5pt; }
+  .formular h2 { font-size: 11.5pt; margin: 0 0 1mm; }
+  .zeile { display: flex; gap: 4mm; margin-bottom: 3mm; }
+  .feld { flex: 1; }
+  .feld.s { flex: 0 0 22mm; }
+  .feld.m { flex: 0 0 44mm; }
+  .feld label { display: block; font-size: 7.5pt; text-transform: uppercase;
+                letter-spacing: 0.05em; color: var(--muted); margin-bottom: 0.4mm; }
+  .feld .linie { border-bottom: 0.5pt solid #8a8a8a; height: 5.2mm; }
+  .gruppe { font-size: 8.5pt; font-weight: 700; margin: 2.5mm 0 1.2mm;
+            padding-bottom: 0.5mm; border-bottom: 0.5pt solid var(--rule); }
+  .gruppe span { font-weight: 400; color: var(--muted); }
+  .klein { font-size: 8pt; color: var(--muted); margin: 0 0 2mm; }
+
+  .einwilligung { border: 0.75pt solid var(--ink); padding: 2.5mm 3mm; margin: 3mm 0; }
+  .einwilligung .z { display: flex; gap: 2.5mm; align-items: flex-start; margin-bottom: 2mm; }
+  .einwilligung .z:last-of-type { margin-bottom: 0; }
+  .kasten { flex: 0 0 3.8mm; height: 3.8mm; border: 0.75pt solid var(--ink); margin-top: 0.3mm; }
+
+  .fuss { display: flex; justify-content: space-between; font-size: 7.5pt; color: var(--muted);
+          margin-top: 2.5mm; padding-top: 1.2mm; border-top: 0.5pt solid var(--rule); }
+
+  .delegierte { margin-top: 4mm; border: 0.75pt solid var(--accent); background: #f4f7fa;
+                padding: 2.5mm 3.5mm; display: flex; gap: 5mm; align-items: center;
+                font-family: Arial, "Helvetica Neue", sans-serif; font-size: 9pt; }
+  .delegierte strong { color: var(--accent); }
+
+  @media screen {
+    body { padding: 14mm 16mm; box-shadow: 0 0 0 1px #e3e3e3; margin-block: 8mm; }
+    .hinweis-druck { max-width: 178mm; margin: 0 auto; padding-top: 4mm;
+                     font: 9pt/1.4 Arial, "Helvetica Neue", sans-serif; color: #666; }
+  }
+  @media print { .hinweis-druck { display: none; } body { padding: 0; max-width: none; } }
+</style>
+
+<div class="hinweis-druck">Vorschau. Drucken mit Strg/Cmd + P, Skalierung 100 %.</div>
+
+<body>
+  <h1>Kontaktangaben für die Klasse</h1>
+  <div class="kopf">
+    Elternrat <span data-feld="schule">Schule Bungertwies</span> ·
+    <span data-feld="klasse">Klasse 3a</span> · Schuljahr <span data-feld="jahr">2026/27</span>
+  </div>
+
+  <p>
+    Der Elternrat ist die Elternvertretung der Schule. Zwei gewählte Delegierte pro Klasse
+    leiten Protokolle und Aufrufe des Elternrats weiter und bringen Anliegen aus der Klasse
+    ein; dafür brauchen sie Ihre Kontaktangaben. Eine Klassenliste und eine WhatsApp-Gruppe
+    sind zusätzlich möglich, aber freiwillig. <strong>Ihre Angaben liegen bei den Delegierten
+    Ihrer Klasse, nicht bei der Schule und nicht beim Vorstand des Elternrats.</strong>
+  </p>
+
+  <div class="wege">
+    <div class="qr" data-qr="formular"></div>
+    <div>
+      <strong>Online in zwei Minuten:</strong> Code scannen oder eintippen —
+      <span class="link" data-feld="formularlink"></span><br>
+      <strong>Auf Papier:</strong> unteren Teil ausfüllen, abtrennen, den Delegierten abgeben.<br>
+      Vollständiges Merkblatt zum Datenschutz:
+      <span class="link" data-feld="merkblattlink"></span>
+    </div>
+  </div>
+
+  <div class="schnitt"></div>
+
+  <div class="formular">
+    <h2><span data-feld="klasse">Klasse 3a</span> · Schuljahr <span data-feld="jahr">2026/27</span>
+      <span class="klein" style="font-weight:400">— Blockschrift bitte</span></h2>
+    <p class="klein">
+      Pflicht sind nur der Name des Kindes und eine Kontaktmöglichkeit. Alles andere ist
+      freiwillig: füllen Sie aus, was Sie teilen möchten.
+    </p>
+
+    <div class="zeile">
+      <div class="feld"><label>Kind — Vorname</label><div class="linie"></div></div>
+      <div class="feld"><label>Kind — Name</label><div class="linie"></div></div>
+    </div>
+
+    <div class="gruppe">Elternteil / Bezugsperson 1</div>
+    <div class="zeile">
+      <div class="feld"><label>Vorname</label><div class="linie"></div></div>
+      <div class="feld"><label>Name</label><div class="linie"></div></div>
+      <div class="feld s"><label>Rolle</label><div class="linie"></div></div>
+    </div>
+    <div class="zeile">
+      <div class="feld"><label>E-Mail</label><div class="linie"></div></div>
+      <div class="feld m"><label>Mobile</label><div class="linie"></div></div>
+    </div>
+    <div class="zeile">
+      <div class="feld"><label>Strasse und Nummer (freiwillig)</label><div class="linie"></div></div>
+      <div class="feld s"><label>PLZ</label><div class="linie"></div></div>
+      <div class="feld m"><label>Ort</label><div class="linie"></div></div>
+    </div>
+
+    <div class="gruppe">Elternteil / Bezugsperson 2 <span>— optional</span></div>
+    <div class="zeile">
+      <div class="feld"><label>Vorname</label><div class="linie"></div></div>
+      <div class="feld"><label>Name</label><div class="linie"></div></div>
+      <div class="feld s"><label>Rolle</label><div class="linie"></div></div>
+    </div>
+    <div class="zeile">
+      <div class="feld"><label>E-Mail</label><div class="linie"></div></div>
+      <div class="feld m"><label>Mobile</label><div class="linie"></div></div>
+    </div>
+    <div class="zeile">
+      <div class="feld"><label>Strasse und Nummer (freiwillig)</label><div class="linie"></div></div>
+      <div class="feld s"><label>PLZ</label><div class="linie"></div></div>
+      <div class="feld m"><label>Ort</label><div class="linie"></div></div>
+    </div>
+
+
+    <div class="einwilligung">
+      <div class="z">
+        <div class="kasten"></div>
+        <div><strong>Ja</strong>, meine Angaben dürfen in die Kontaktliste dieser Klasse
+          aufgenommen werden, die alle Eltern der Klasse erhalten.</div>
+      </div>
+      <div class="z">
+        <div class="kasten"></div>
+        <div><strong>Ja</strong>, ich möchte in die WhatsApp-Gruppe der Klasse. Dort sehen
+          alle Mitglieder meine Telefonnummer.</div>
+      </div>
+      <p class="klein" style="margin: 2mm 0 0">
+        Gilt für die oben genannten Personen. Ohne Kreuz erscheinen Sie auf keiner Liste
+        und werden nur direkt kontaktiert.
+      </p>
+    </div>
+
+    <div class="zeile">
+      <div class="feld m"><label>Datum</label><div class="linie"></div></div>
+    </div>
+
+    <div class="fuss">
+      <span data-feld="schule">Schule Bungertwies</span>
+      <span>Merkblatt-Version <span data-feld="version">2026-08-1</span></span>
+    </div>
+  </div>
+
+</body>
+
+<script type="module">
+  import { qrSvg } from '../core/qr.js';
+  import { parseClassName } from '../core/classname.js';
+
+  const p = new URLSearchParams(location.search);
+  const basis = (p.get('basis') || 'https://bungi-eltern.mrpia.ch').replace(/\/$/, '');
+  const klasse = p.get('klasse') || 'Klasse 3a';
+  // The slug comes from the class name itself, so the only parameter that has to be right
+  // is the one a human types.
+  const slug = parseClassName(klasse).slug || 'klasse';
+
+  const ziele = {
+    formular:  `${basis}/f/${slug}`,
+    merkblatt: `${basis}/merkblatt`,
+  };
+  const kurz = (u) => u.replace(/^https?:\/\//, '');
+
+  const werte = {
+    klasse,
+    jahr: p.get('jahr') || '2026/27',
+    schule: p.get('schule') || 'Schule Bungertwies',
+    version: p.get('version') || '2026-08-1',
+    formularlink: kurz(ziele.formular),
+    merkblattlink: kurz(ziele.merkblatt),
+  };
+  for (const el of document.querySelectorAll('[data-feld]')) {
+    const v = p.get(el.dataset.feld) ?? werte[el.dataset.feld];
+    if (v) el.textContent = v;
+  }
+  for (const el of document.querySelectorAll('[data-qr]')) {
+    el.innerHTML = qrSvg(ziele[el.dataset.qr], { title: ziele[el.dataset.qr] });
+    el.style.border = 'none';
+  }
+  document.title = 'Elternblatt ' + klasse;
+</script>

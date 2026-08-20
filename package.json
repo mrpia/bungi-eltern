@@ -1,0 +1,13 @@
+{
+  "name": "klassenkontakte",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Werkzeug fuer Klassendelegierte: Kontaktdaten einsammeln, Klassenliste und Kontaktkarten erzeugen. Keine Laufzeit-Abhaengigkeiten.",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "build": "node tools/build.mjs",
+    "serve": "python3 -m http.server 8080 --directory site",
+    "dev": "node tools/build.mjs && python3 -m http.server 8080 --directory site"
+  }
+}
