@@ -146,3 +146,14 @@ in [`docs/hosting.md`](hosting.md) if a second subdomain is ever set up.)*
   success, which is what let the `<meta>` bug ship. `tools/build.mjs` now throws instead,
   and `site/` is gitignored, so a build-time throw is the only place such a thing can be
   caught before it is live.
+- **The German→English rename broke three substitutions, not one.** The `<meta>` names were
+  the first. `siteValues` in `tools/build.mjs` was the third and the worst: its keys stayed
+  German (`schule`, `jahr`, `kontakt`) while the markup went English, so only `version`
+  matched — and `contact`, the one empty span, rendered empty. The live Merkblatt named no
+  address for withdrawing consent unless JavaScript ran, which is precisely the failure the
+  comment above `fillDefaults` was written to prevent. Both are now guarded: `setMeta`
+  throws on an absent name, and the build throws when a `site.config.json` value reaches no
+  page at all.
+- **Bump `noticeVersion` on every edit to `src/kit/notice.html`.** Consent records store the
+  version they were given, so an edited notice under an unchanged version means a record
+  points at text nobody kept. The file says so at the top; it was still missed once.

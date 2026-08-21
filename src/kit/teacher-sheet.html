@@ -73,7 +73,7 @@
 
   <h2>Vorschlag zum Vorlesen</h2>
   <div class="read-aloud">
-    „Der Elternrat braucht von jeder Familie eine Kontaktangabe, damit die Delegierten
+    „Die Delegierten brauchen von jeder Familie eine Kontaktangabe, damit sie
     dieser Klasse Sie erreichen können. Wer möchte, kann zusätzlich in eine Klassenliste
     und in eine WhatsApp-Gruppe aufgenommen werden — das ist freiwillig und braucht ein
     Kreuz auf dem Blatt. Die Angaben bleiben bei den Delegierten dieser Klasse: weder die
@@ -125,17 +125,16 @@
   const base = (p.get('base') || 'https://bungi-eltern.mrpia.ch').replace(/\/$/, '');
   const startUrl = `${base}/start`;
 
+  // Only what the build cannot know. Site-wide values are already in the markup from
+  // site.config.json; repeating them as literals here is how they went stale.
   const values = {
     class: p.get('class') || 'Klasse 3a',
-    year: p.get('year') || '2026/27',
-    school: p.get('school') || 'Schule Bungertwies',
     count: p.get('count') || '22',
-    version: p.get('version') || '2026-08-1',
-    contact: p.get('contact') || 'pa.galiana@gmail.com',
     startLink: startUrl.replace(/^https?:\/\//, ''),
   };
   for (const el of document.querySelectorAll('[data-field]')) {
-    if (values[el.dataset.field]) el.textContent = values[el.dataset.field];
+    const v = p.get(el.dataset.field) ?? values[el.dataset.field];
+    if (v) el.textContent = v;
   }
   for (const el of document.querySelectorAll('[data-qr]')) {
     el.innerHTML = qrSvg(startUrl, { title: startUrl });

@@ -203,12 +203,11 @@
   };
   const withoutScheme = (u) => u.replace(/^https?:\/\//, '');
 
-  // Keys here must match the data-field values in the markup above.
+  // Only what the build cannot know: the class, and the two links derived from it. The
+  // site-wide values (school, year, Merkblatt version) are already in the markup, put there
+  // from site.config.json — repeating them here as literals is how they went stale.
   const values = {
     class: classLabel,
-    year: p.get('year') || '2026/27',
-    school: p.get('school') || 'Schule Bungertwies',
-    version: p.get('version') || '2026-08-1',
     formLink: withoutScheme(targets.form),
     noticeLink: withoutScheme(targets.notice),
   };

@@ -30,11 +30,22 @@ const cfg = JSON.parse(await readFile(join(ROOT, 'site.config.json'), 'utf8'));
  * So anything that comes from site.config.json is substituted here. Runtime parameters
  * still override, they just no longer have to be present.
  */
+/** Which site-wide fields actually reached a page, so the build can notice when one does not. */
+const filledFields = new Set();
+
 function fillDefaults(text, values) {
+  // `[^<]*` rather than nothing between the tags: this used to fill only *empty*
+  // placeholders, so `<span data-field="version">2026-08-1</span>` in the two sheets was a
+  // hardcoded literal that config could not reach. Bumping noticeVersion left both printed
+  // sheets citing a version of the Merkblatt that no longer existed. Fields absent from
+  // `values` — the per-class `class` and `count` — are still left alone.
   return text.replace(
-    /<(span|div)([^>]*?)data-field="([a-z]+)"([^>]*?)><\/\1>/g,
-    (whole, tag, pre, field, post) =>
-      values[field] === undefined ? whole : `<${tag}${pre}data-field="${field}"${post}>${values[field]}</${tag}>`,
+    /<(span|div)([^>]*?)data-field="([a-z]+)"([^>]*?)>[^<]*<\/\1>/g,
+    (whole, tag, pre, field, post) => {
+      if (values[field] === undefined) return whole;
+      filledFields.add(field);
+      return `<${tag}${pre}data-field="${field}"${post}>${values[field]}</${tag}>`;
+    },
   );
 }
 
@@ -309,10 +320,16 @@ for (const [url, text] of emitted) await write(url.slice(1), text);
 
 // Printable sheets keep their own filenames; they are opened from the kit page.
 // Per-class values (klasse, anzahl) stay dynamic; everything site-wide is baked in.
+// Keys must match the `data-field` names in the markup. They were German here while the
+// markup was renamed to English, so only `version` — the one word identical in both — ever
+// matched. `school` and `year` looked fine because their hardcoded placeholders happened to
+// equal the config, but `contact` is an empty span, and it rendered empty: the Merkblatt
+// went out with no address to write to for withdrawing consent, exactly the failure the
+// comment on fillDefaults describes. The check after the build now makes this impossible.
 const siteValues = {
-  schule: cfg.school,
-  jahr: cfg.schoolYear,
-  kontakt: cfg.contact,
+  school: cfg.school,
+  year: cfg.schoolYear,
+  contact: cfg.contact,
   version: cfg.noticeVersion,
 };
 const prepare = (text) => withWip(
@@ -397,6 +414,14 @@ ${classes.map((c) => {
     `<td><a href="/f/${c.parsed.slug}/">/f/${c.parsed.slug}/</a></td></tr>`;
 }).join('\n')}
 </table>`));
+
+// A value from site.config.json that reached no page at all is a name that no markup uses —
+// which is what a rename across the German/English boundary looks like from here.
+const unreached = Object.keys(siteValues).filter((field) => !filledFields.has(field));
+if (unreached.length) {
+  throw new Error(`site.config values reached no page: ${unreached.join(', ')} `
+    + '— no markup has a matching data-field name');
+}
 
 const count = (await readdir(OUT, { recursive: true })).length;
 console.log(`site/ built: ${count} entries, ${classes.length} classes`);
